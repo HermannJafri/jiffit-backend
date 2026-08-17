@@ -49,6 +49,13 @@ heroesRouter.patch(
 );
 
 heroesRouter.get(
+  '/live-map',
+  asyncRoute(async (_req, res) => {
+    ok(res, await heroes.listLiveMap());
+  }),
+);
+
+heroesRouter.get(
   '/',
   asyncRoute(async (req, res) => {
     ok(
@@ -94,6 +101,26 @@ heroesRouter.patch(
   validate(z.object({ blacklisted: z.boolean(), reason: z.string().trim().max(500).optional() })),
   asyncRoute(async (req, res) => {
     ok(res, await heroes.setHeroBlacklist(Number(req.params.id), req.body.blacklisted, req.body.reason));
+  }),
+);
+
+heroesRouter.patch(
+  '/:id',
+  canWrite,
+  validate(
+    z.object({
+      name: z.string().trim().min(1).max(100).optional(),
+      cityId: z.number().int().positive().optional(),
+      hubId: z.number().int().positive().optional(),
+      language: z.enum(['ENGLISH', 'HINDI', 'HINGLISH']).optional(),
+      workType: z.enum(['HELPER', 'BIKE_RIDER']).optional(),
+      vehicleType: z.enum(['CYCLE', 'BIKE', 'ELECTRIC_BIKE', 'NO_VEHICLE', 'COMPANY_EV']).optional(),
+      earningsType: z.enum(['SALARY', 'COMMISSION']).optional(),
+      skillServiceIds: z.array(z.number().int().positive()).optional(),
+    }),
+  ),
+  asyncRoute(async (req, res) => {
+    ok(res, await heroes.updateHero(Number(req.params.id), req.body), 'Updated');
   }),
 );
 

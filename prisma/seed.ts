@@ -38,7 +38,7 @@ async function main() {
         mustResetPassword: true,
       },
     });
-    console.log(`Seeded dashboard user '${username}'. Change the password immediately.`);
+    console.log(`Seeded dashboard user '${username}' (DEVELOPMENT ONLY — never use this password in production).`);
   }
 
   await prisma.appSetting.upsert({

@@ -21,14 +21,14 @@
 | address | customer_addresses |
 | orders | bookings (`legacyOrderId`) |
 | orders.items JSON | booking_items (frozen name/price) |
-| tags | service_categories / service_groups |
-| vendor_rates | services / service_variants |
+| tags | excluded from live activation; catalog reconstruction reference |
+| vendor_rates | excluded pending reviewed mapping into services / service_variants |
 | tasks | legacy_booking_visits (not live dispatch) |
-| wallet_trn | legacy_wallet_transactions + optional customer wallet opening balances |
-| invoices | invoices / legacy_invoice_snapshots |
+| wallet_trn | legacy_wallet_transactions (historical-only, never spendable) |
+| invoices | legacy_invoice_snapshots (historical-only) |
 | slots | historical label on booking; live slots are capacity pool |
 | cities | cities (+ default hub) |
-| offers | coupons |
+| offers | excluded; legacy promotion rules must not become active coupons |
 | track_location | do not bulk-import breadcrumbs unless needed; live location is rewrite pipeline |
 | settings secrets | **do not migrate** |
 
@@ -72,7 +72,17 @@ Finance reconciles **count and amount**, not count alone.
 npm run migrate:legacy
 ```
 
-Reads `LEGACY_SQL_DUMP` or `C:\Users\herma\Downloads\Backup\old-jiffit-latest.sql`, inventories INSERT statements, writes `docs/migration-reports/legacy-dry-run.{json,md}`. Apply mode is blocked until an isolated staging MySQL is confirmed. No FCM/OTP/Zoho/SMS/dispatch.
+Dry-run reads `LEGACY_SQL_DUMP` (with the local rehearsal dump as a convenience default), inventories INSERT statements, and writes `docs/migration-reports/legacy-dry-run.{json,md}`.
+
+Apply is reusable for any restored dump and requires explicit isolated databases:
+
+```bash
+LEGACY_SOURCE_URL=mysql://.../restored_legacy \
+MIGRATION_TARGET_URL=mysql://.../jiffit_migration_target \
+npm run migrate:legacy:apply
+```
+
+The target name must start with `jiffit_migration`; known development, source, and production-like databases are rejected. Apply writes directly through Prisma and does not invoke FCM, OTP, Zoho, SMS, payments, notifications, or dispatch.
 
 1. Preserve untouched backup of the fresh dump
 2. Restore in an isolated migration environment
@@ -88,4 +98,4 @@ Never import an untested dump into the new production database.
 
 ## Tooling location
 
-`jiffit-backend/scripts/migration/` (to be implemented). CLI: `npm run migrate:legacy -- --dry-run` then `--apply`.
+Implementation: `src/migration/`. CLI: `npm run migrate:legacy` for inventory and `npm run migrate:legacy:apply` for an explicit isolated apply.

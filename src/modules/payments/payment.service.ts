@@ -174,6 +174,9 @@ export async function mockPayBooking(customerId: number, bookingId: number) {
   }
   const order = await ensurePaymentOrderForBooking(customerId, bookingId);
   if (!order) throw new AppError(404, 'Booking not found', 'NOT_FOUND');
+  if (['PAID', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(order.status)) {
+    throw new PaymentDomainError('PAYMENT_ALREADY_PAID', 'Booking is already paid');
+  }
   const checkout = order.activeAttemptId
     ? { order, attempt: await prisma.paymentAttempt.findUniqueOrThrow({ where: { id: order.activeAttemptId } }), reused: true }
     : await createMockAttempt(order, bookingId, customerId);

@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import type { Prisma, BookingStatus } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { env } from '../../config/env';
 import { AppError } from '../../utils/http';
@@ -208,6 +209,40 @@ export async function offerNextHero(bookingId: number, reason: string): Promise<
   });
 }
 
+async function markHeroAccepted(
+  tx: Prisma.TransactionClient,
+  booking: { id: number; status: BookingStatus },
+  heroId: number,
+  now: Date,
+) {
+  assertBookingTransition({ from: booking.status, to: 'ACCEPTED', actorType: 'HERO' });
+  await tx.bookingAssignment.updateMany({
+    where: { bookingId: booking.id, heroId, status: 'ASSIGNED' },
+    data: { status: 'ACCEPTED', acceptedAt: now },
+  });
+  return tx.booking.update({
+    where: { id: booking.id },
+    data: {
+      status: 'ACCEPTED',
+      assignedHeroId: heroId,
+      version: { increment: 1 },
+      statusHistory: {
+        create: {
+          fromStatus: booking.status,
+          toStatus: 'ACCEPTED',
+          ...bookingAudit({
+            actorType: 'HERO',
+            actorId: heroId,
+            source: 'HERO_APP',
+            reasonCode: 'HERO_ACCEPTED',
+            reasonText: 'Hero accepted the job',
+          }),
+        },
+      },
+    },
+  });
+}
+
 export async function acceptOffer(bookingId: number, heroId: number) {
   const now = new Date();
   const result = await prisma.$transaction(async (tx) => {
@@ -217,7 +252,18 @@ export async function acceptOffer(bookingId: number, heroId: number) {
     });
     if (!booking) throw new AppError(404, 'Booking not found', 'NOT_FOUND');
     const dispatch = await tx.bookingDispatch.findUnique({ where: { bookingId } });
-    if (!dispatch?.currentOfferAttemptId) throw new AppError(409, 'No active offer', 'OFFER_NOT_FOUND');
+    if (!dispatch?.currentOfferAttemptId) {
+      if (booking.assignedHeroId !== heroId || booking.status !== 'ASSIGNED') {
+        throw new AppError(409, 'No active offer', 'OFFER_NOT_FOUND');
+      }
+      if (dispatch) {
+        await tx.bookingDispatch.update({
+          where: { id: dispatch.id },
+          data: { dispatchState: 'HERO_ACCEPTED', currentCandidateHeroId: heroId },
+        });
+      }
+      return markHeroAccepted(tx, booking, heroId, now);
+    }
     const offer = await tx.bookingOfferAttempt.findUnique({ where: { id: dispatch.currentOfferAttemptId } });
     if (!offer) throw new AppError(409, 'No active offer', 'OFFER_NOT_FOUND');
     const decision = isOfferAcceptable({
@@ -231,7 +277,6 @@ export async function acceptOffer(bookingId: number, heroId: number) {
     });
     if (decision === 'REJECT') throw new AppError(409, 'Offer is no longer acceptable', 'OFFER_REJECTED');
     if (decision === 'IDEMPOTENT') return booking;
-    assertBookingTransition({ from: booking.status, to: 'ACCEPTED', actorType: 'HERO' });
     await tx.bookingOfferAttempt.update({
       where: { id: offer.id },
       data: { status: 'ACCEPTED', acceptedAt: now, activeKey: null },
@@ -240,31 +285,7 @@ export async function acceptOffer(bookingId: number, heroId: number) {
       where: { id: dispatch.id },
       data: { dispatchState: 'HERO_ACCEPTED', currentCandidateHeroId: heroId },
     });
-    await tx.bookingAssignment.updateMany({
-      where: { bookingId, heroId, status: 'ASSIGNED' },
-      data: { status: 'ACCEPTED', acceptedAt: now },
-    });
-    return tx.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: 'ACCEPTED',
-        assignedHeroId: heroId,
-        version: { increment: 1 },
-        statusHistory: {
-          create: {
-            fromStatus: booking.status,
-            toStatus: 'ACCEPTED',
-            ...bookingAudit({
-              actorType: 'HERO',
-              actorId: heroId,
-              source: 'HERO_APP',
-              reasonCode: 'HERO_ACCEPTED',
-              reasonText: 'Hero accepted the job',
-            }),
-          },
-        },
-      },
-    });
+    return markHeroAccepted(tx, booking, heroId, now);
   });
   return result;
 }

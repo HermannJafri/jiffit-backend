@@ -78,6 +78,44 @@ export async function setHeroBlacklist(id: number, blacklisted: boolean, reason?
   });
 }
 
+export async function updateHero(
+  id: number,
+  input: {
+    name?: string;
+    cityId?: number;
+    hubId?: number;
+    language?: 'ENGLISH' | 'HINDI' | 'HINGLISH';
+    workType?: 'HELPER' | 'BIKE_RIDER';
+    vehicleType?: 'CYCLE' | 'BIKE' | 'ELECTRIC_BIKE' | 'NO_VEHICLE' | 'COMPANY_EV';
+    earningsType?: 'SALARY' | 'COMMISSION';
+    skillServiceIds?: number[];
+  },
+) {
+  await getHero(id);
+  return prisma.$transaction(async (tx) => {
+    if (input.skillServiceIds) {
+      await tx.heroSkill.deleteMany({ where: { heroId: id } });
+      if (input.skillServiceIds.length) {
+        await tx.heroSkill.createMany({
+          data: input.skillServiceIds.map((serviceId) => ({ heroId: id, serviceId, isActive: true })),
+        });
+      }
+    }
+    return tx.hero.update({
+      where: { id },
+      data: {
+        name: input.name,
+        cityId: input.cityId,
+        hubId: input.hubId,
+        language: input.language,
+        workType: input.workType,
+        vehicleType: input.vehicleType,
+        earningsType: input.earningsType,
+      },
+    });
+  });
+}
+
 export async function listCustomers(filter: { q?: string; page?: number; limit?: number }) {
   const page = filter.page ?? 1;
   const limit = Math.min(filter.limit ?? 20, 100);
@@ -94,6 +132,29 @@ export async function listCustomers(filter: { q?: string; page?: number; limit?:
     }),
   ]);
   return { total, page, limit, customers };
+}
+
+export async function listLiveMap() {
+  const heroes = await prisma.hero.findMany({
+    where: { deletedAt: null, isActive: true, dutyStatus: 'ONLINE' },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      dutyStatus: true,
+      currentLat: true,
+      currentLng: true,
+      currentLocationUpdatedAt: true,
+      hub: { select: { id: true, name: true } },
+      city: { select: { id: true, name: true } },
+    },
+    orderBy: { currentLocationUpdatedAt: 'desc' },
+    take: 200,
+  });
+  return {
+    googleMapsConfigured: Boolean(process.env.GOOGLE_MAPS_API_KEY),
+    heroes,
+  };
 }
 
 export async function listAttendance(filter: { hubId?: number; page?: number; limit?: number }) {

@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REQUIRED_REHEARSAL_TABLES } from './legacy-map';
 import { inventoryLegacySqlDump } from './sql-inventory';
+import { applyLegacyImport, assertIsolatedTargetUrl } from './apply';
 
 const DEFAULT_DUMP = 'C:\\Users\\herma\\Downloads\\Backup\\old-jiffit-latest.sql';
 
@@ -11,7 +12,18 @@ async function main() {
   const suppressSideEffects = true;
 
   if (!dryRun) {
-    throw new Error('Apply mode is disabled until a dedicated staging MySQL is confirmed. Use --dry-run.');
+    if (!process.argv.includes('--isolated-staging')) {
+      throw new Error('Apply mode requires --isolated-staging. Never apply to jiffit_dev or unknown production.');
+    }
+    const sourceUrl = process.env.LEGACY_SOURCE_URL;
+    const targetUrl = process.env.MIGRATION_TARGET_URL;
+    if (!sourceUrl || !targetUrl) {
+      throw new Error('Set LEGACY_SOURCE_URL and MIGRATION_TARGET_URL to isolated MySQL databases.');
+    }
+    assertIsolatedTargetUrl(targetUrl);
+    const report = await applyLegacyImport({ sourceUrl, targetUrl, dump });
+    console.log(`APPLY_OK target=${report.targetDatabase} bookings=${report.imported.bookings} failed=${report.failedCount}`);
+    return;
   }
 
   const rows = await inventoryLegacySqlDump(dump);
@@ -56,7 +68,7 @@ async function main() {
       '|-------|---------|-----------|--------|-------|',
       ...rows.map((row) => `| ${row.table} | ${row.insertStatements} | ${row.estimatedRows} | ${row.target} | ${row.notes} |`),
       '',
-      'Apply to a live database is intentionally blocked until staging MySQL is confirmed.',
+      'Apply: `LEGACY_SOURCE_URL` + `MIGRATION_TARGET_URL` (must be `jiffit_migration_*`) then `npm run migrate:legacy:apply`.',
       '',
     ].join('\n'),
   );

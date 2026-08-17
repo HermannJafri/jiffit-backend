@@ -1,7 +1,7 @@
 import { Prisma, type BookingStatus } from '@prisma/client';
 import { prisma } from '../../config/database';
 import { AppError } from '../../utils/http';
-import { pickServiceableHub } from '../../utils/haversine';
+import { missingServiceIdsAtLocation } from '../../utils/haversine';
 import { normalizeIndianMobile } from '../../utils/phone';
 import {
   assertBookingTransition,
@@ -205,17 +205,33 @@ async function getUnavailableServiceIds(serviceIds: number[], latitude: unknown,
 
   const hubs = await prisma.hub.findMany({
     where: { isActive: true },
-    select: { id: true, name: true, cityId: true, latitude: true, longitude: true, serviceRadiusMeters: true },
+    select: {
+      id: true,
+      name: true,
+      cityId: true,
+      latitude: true,
+      longitude: true,
+      serviceRadiusMeters: true,
+      serviceAvailability: {
+        where: { serviceId: { in: serviceIds }, isActive: true },
+        select: { serviceId: true },
+      },
+    },
   });
-  const hub = pickServiceableHub(lat, lng, hubs);
-  if (!hub) return serviceIds;
-
-  const availableRows = await prisma.hubServiceAvailability.findMany({
-    where: { hubId: hub.id, serviceId: { in: serviceIds }, isActive: true },
-    select: { serviceId: true },
-  });
-  const availableIds = new Set(availableRows.map((row) => row.serviceId));
-  return serviceIds.filter((serviceId) => !availableIds.has(serviceId));
+  return missingServiceIdsAtLocation(
+    lat,
+    lng,
+    hubs.map((hub) => ({
+      id: hub.id,
+      name: hub.name,
+      cityId: hub.cityId,
+      latitude: hub.latitude,
+      longitude: hub.longitude,
+      serviceRadiusMeters: hub.serviceRadiusMeters,
+      offeredServiceIds: hub.serviceAvailability.map((row) => row.serviceId),
+    })),
+    serviceIds,
+  );
 }
 
 async function detectPackagePurchase(items: { serviceVariantId?: number }[]) {

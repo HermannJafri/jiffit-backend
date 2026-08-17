@@ -1,0 +1,889 @@
+{
+  "generatedAt": "2026-08-17T09:36:58.749Z",
+  "startedAt": "2026-08-17T09:36:00.201Z",
+  "dump": "C:\\Users\\herma\\Downloads\\Backup\\old-jiffit-latest.sql",
+  "sourceDatabase": "jiffit_legacy_source",
+  "targetDatabase": "jiffit_migration_target",
+  "complete": true,
+  "sideEffects": {
+    "fcm": false,
+    "otp": false,
+    "zoho": false,
+    "sms": false,
+    "paymentRequests": false,
+    "autoDispatch": false,
+    "mechanism": "Importer writes directly with Prisma and never calls application services; imported bookings never use live dispatch states.",
+    "targetDatabaseTriggers": 0,
+    "targetOperationalRows": {
+      "activeLegacyAdmins": 0,
+      "bookingDispatches": 0,
+      "dispatchOutboxEvents": 0,
+      "pushNotificationLogs": 0,
+      "otpChallenges": 0,
+      "paymentOrders": 0
+    }
+  },
+  "source": {
+    "users": 27321,
+    "orders": 17894,
+    "tasks": 102546,
+    "address": 14757,
+    "wallet_trn": 91735,
+    "invoices": 10509,
+    "cities": 4,
+    "admin": 96,
+    "tags": 145,
+    "vendor_rates": 466,
+    "payments": 0,
+    "walletAmount": 25141260.79,
+    "userRoles": {
+      "0": 26562,
+      "1": 759
+    }
+  },
+  "sourceInventory": {
+    "address": 14757,
+    "admin": 96,
+    "banners": 21,
+    "blog_authors": 2,
+    "blog_cats": 5,
+    "blogs": 13,
+    "careers": 0,
+    "cities": 4,
+    "courses": 1,
+    "currency": 2,
+    "faqs": 13,
+    "invoices": 10509,
+    "jobs": 0,
+    "language": 1,
+    "messages": 934,
+    "migrations": 1,
+    "offers": 35,
+    "orders": 17894,
+    "orderstats": 10,
+    "pages": 13,
+    "payments": 0,
+    "permission_role": 116,
+    "permissions": 46,
+    "reviews": 0,
+    "roles": 5,
+    "settings": 45,
+    "slides": 0,
+    "slots": 6,
+    "subjects": 0,
+    "tags": 145,
+    "tasks": 102546,
+    "testimonials": 10,
+    "track_location": 3214,
+    "users": 27321,
+    "vdevices": 0,
+    "vendor_orders": 0,
+    "vendor_photos": 3,
+    "vendor_rates": 466,
+    "vendor_tags": 2753,
+    "vendor_types": 2,
+    "vendors": 0,
+    "vpushes": 13190,
+    "vusers": 0,
+    "wallet_trn": 91735
+  },
+  "excludedTables": [
+    {
+      "table": "banners",
+      "count": 21,
+      "reason": "Excluded from activation pending editorial review; source remains in the immutable dump"
+    },
+    {
+      "table": "blog_authors",
+      "count": 2,
+      "reason": "Excluded with legacy editorial content; no operational dependency"
+    },
+    {
+      "table": "blog_cats",
+      "count": 5,
+      "reason": "Excluded with legacy editorial content; no operational dependency"
+    },
+    {
+      "table": "blogs",
+      "count": 13,
+      "reason": "Excluded from activation pending editorial review"
+    },
+    {
+      "table": "courses",
+      "count": 1,
+      "reason": "Excluded: no active course rows or target operational dependency"
+    },
+    {
+      "table": "currency",
+      "count": 2,
+      "reason": "Excluded: replaced by application currency configuration"
+    },
+    {
+      "table": "faqs",
+      "count": 13,
+      "reason": "Excluded from activation pending editorial review"
+    },
+    {
+      "table": "language",
+      "count": 1,
+      "reason": "Excluded: replaced by application language configuration"
+    },
+    {
+      "table": "messages",
+      "count": 934,
+      "reason": "Excluded: legacy support messages are not part of the v1 support cutover"
+    },
+    {
+      "table": "migrations",
+      "count": 1,
+      "reason": "Excluded: legacy framework migration metadata is not business data"
+    },
+    {
+      "table": "offers",
+      "count": 35,
+      "reason": "Excluded: expired/legacy promotion rules must not become active coupons"
+    },
+    {
+      "table": "orderstats",
+      "count": 10,
+      "reason": "Excluded: derived status lookup replaced by the target booking-status enum"
+    },
+    {
+      "table": "pages",
+      "count": 13,
+      "reason": "Excluded from activation pending editorial review"
+    },
+    {
+      "table": "permission_role",
+      "count": 116,
+      "reason": "Excluded: legacy authorization model is incompatible with target RBAC"
+    },
+    {
+      "table": "permissions",
+      "count": 46,
+      "reason": "Excluded: legacy authorization model is incompatible with target RBAC"
+    },
+    {
+      "table": "roles",
+      "count": 5,
+      "reason": "Excluded: legacy authorization model is incompatible with target RBAC"
+    },
+    {
+      "table": "settings",
+      "count": 45,
+      "reason": "Do not migrate secrets"
+    },
+    {
+      "table": "slots",
+      "count": 6,
+      "reason": "Historical label only; live slots are capacity pool"
+    },
+    {
+      "table": "tags",
+      "count": 145,
+      "reason": "Excluded from live activation: legacy hierarchy is only a catalog reconstruction reference"
+    },
+    {
+      "table": "testimonials",
+      "count": 10,
+      "reason": "Excluded from activation pending editorial review"
+    },
+    {
+      "table": "track_location",
+      "count": 3214,
+      "reason": "Excluded: stale high-volume location telemetry is not operational state and carries privacy risk"
+    },
+    {
+      "table": "vendor_photos",
+      "count": 3,
+      "reason": "Excluded: orphaned legacy vendor media reference with no live vendor target"
+    },
+    {
+      "table": "vendor_rates",
+      "count": 466,
+      "reason": "Excluded from live activation: rates require explicit product review and mapping to the reconstructed catalog"
+    },
+    {
+      "table": "vendor_tags",
+      "count": 2753,
+      "reason": "Excluded: legacy vendor/catalog join is retained only as reconstruction reference"
+    },
+    {
+      "table": "vendor_types",
+      "count": 2,
+      "reason": "Excluded: legacy vendor taxonomy is not used by the target operating model"
+    },
+    {
+      "table": "vpushes",
+      "count": 13190,
+      "reason": "Excluded: historical push queue must never be replayed"
+    }
+  ],
+  "imported": {
+    "cities": 4,
+    "admins": 96,
+    "customers": 26559,
+    "heroes": 744,
+    "addresses": 14757,
+    "bookings": 17894,
+    "visits": 102546,
+    "visitsOrphaned": 0,
+    "visitsComplete": true,
+    "wallet": 91735,
+    "walletAmountImported": 25141260.79,
+    "invoices": 10509,
+    "invoicesUnmapped": 0
+  },
+  "targetWallet": {
+    "count": 91735,
+    "amount": 25141260.79
+  },
+  "reconciliation": [
+    {
+      "entity": "cities",
+      "source": 4,
+      "target": 4,
+      "difference": 0,
+      "reason": "All legacy cities imported with inactive-safe default hubs."
+    },
+    {
+      "entity": "legacy admins",
+      "source": 96,
+      "target": 96,
+      "difference": 0,
+      "reason": "Imported disabled with an unknown random password and mandatory reset; no legacy credentials reused."
+    },
+    {
+      "entity": "customers",
+      "source": 26562,
+      "target": 26559,
+      "difference": -3,
+      "reason": "Difference is invalid or duplicate phone identities listed in failed records."
+    },
+    {
+      "entity": "heroes",
+      "source": 759,
+      "target": 744,
+      "difference": -15,
+      "reason": "Difference is invalid or duplicate phone identities listed in failed records."
+    },
+    {
+      "entity": "addresses",
+      "source": 14757,
+      "target": 14757,
+      "difference": 0,
+      "reason": "All rows retained in the historical address table; unresolved customer links remain null."
+    },
+    {
+      "entity": "bookings/orders",
+      "source": 17894,
+      "target": 17894,
+      "difference": 0,
+      "reason": "Invalid coordinates are retained raw and excluded only from typed latitude/longitude."
+    },
+    {
+      "entity": "tasks/visits",
+      "source": 102546,
+      "target": 102546,
+      "difference": 0,
+      "reason": "0 source order references are unmatched but rows are retained with null booking_id."
+    },
+    {
+      "entity": "wallet",
+      "source": 91735,
+      "target": 91735,
+      "difference": 0,
+      "reason": "Historical-only; never included in spendable balances."
+    },
+    {
+      "entity": "invoices",
+      "source": 10509,
+      "target": 10509,
+      "difference": 0,
+      "reason": "0 source order references are unmatched but snapshots are retained."
+    },
+    {
+      "entity": "payments",
+      "source": 0,
+      "target": 0,
+      "difference": 0,
+      "reason": "The legacy payments table is empty; order, invoice, and wallet financial history is reconciled separately."
+    },
+    {
+      "entity": "catalog tags",
+      "source": 145,
+      "target": 0,
+      "difference": -145,
+      "reason": "Intentionally not activated: legacy tag hierarchy does not map safely to the reconstructed live catalog."
+    },
+    {
+      "entity": "catalog vendor rates",
+      "source": 466,
+      "target": 0,
+      "difference": -466,
+      "reason": "Intentionally not activated: preserved in the source dump as catalog reconstruction reference."
+    }
+  ],
+  "relationshipReconciliation": {
+    "addresses": {
+      "linked": 14737,
+      "unlinked": 20,
+      "reason": "Unlinked rows retain legacy_user_id and source_address_id."
+    },
+    "bookings": {
+      "linked": 17862,
+      "unlinked": 32,
+      "reason": "Unlinked rows retain legacy_order_id and denormalized customer identity."
+    },
+    "visits": {
+      "linked": 102546,
+      "unlinked": 0,
+      "reason": "Every row retains legacy_order_id and source_task_id."
+    },
+    "walletCustomers": {
+      "linked": 91728,
+      "unlinked": 7,
+      "reason": "Every row retains source_trn_id plus legacy order/task/driver identifiers."
+    },
+    "walletHeroes": {
+      "unmatchedLegacyDrivers": 639,
+      "reason": "Unmatched attribution retains legacy_driver_id."
+    },
+    "invoices": {
+      "linked": 10509,
+      "unlinked": 0,
+      "reason": "Every row retains source_invoice_id and legacy_order_id."
+    }
+  },
+  "financialReconciliation": {
+    "orders": {
+      "source": {
+        "subtotal": 6721724.23,
+        "discountTotal": 23381837,
+        "taxTotal": 320082.22,
+        "rawPayableTotal": 33859559,
+        "effectivePayableTotal": 33859559,
+        "advancePaid": 1941768.82,
+        "finalPaid": 16301961.75
+      },
+      "target": {
+        "subtotal": 6721724.23,
+        "discountTotal": 23381837,
+        "taxTotal": 320082.22,
+        "payableTotal": 33859559,
+        "advancePaid": 1941768.82,
+        "finalPaid": 16301961.75
+      }
+    },
+    "invoices": {
+      "source": {
+        "sub_total": 17389720.74,
+        "discount_total": 1511345,
+        "discounted_total": 13676723.43,
+        "gst_amount": 784332.74,
+        "payable_total": 16662708.48,
+        "total_paid": 16410343.55
+      },
+      "target": {
+        "subTotal": 17389720.74,
+        "discountTotal": 1511345,
+        "discountedTotal": 13676723.43,
+        "gstAmount": 784332.74,
+        "payableTotal": 16662708.48,
+        "totalPaid": 16410343.55
+      }
+    },
+    "differences": {
+      "orders": {
+        "subtotal": 0,
+        "discountTotal": 0,
+        "taxTotal": 0,
+        "payableTotal": 0,
+        "advancePaid": 0,
+        "finalPaid": 0
+      },
+      "invoices": {
+        "subTotal": 0,
+        "discountTotal": 0,
+        "discountedTotal": 0,
+        "gstAmount": 0,
+        "payableTotal": 0,
+        "totalPaid": 0
+      },
+      "wallet": 0
+    },
+    "wallet": {
+      "sourceAmount": 25141260.79,
+      "targetAmount": 25141260.79,
+      "difference": 0
+    }
+  },
+  "failedCount": 18,
+  "failed": [
+    {
+      "table": "users",
+      "sourceId": 743,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 1100,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 1912,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 2153,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 2343,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 2375,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 2388,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 13053,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 15748,
+      "reason": "invalid mobile"
+    },
+    {
+      "table": "users",
+      "sourceId": 18674,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 19315,
+      "reason": "invalid mobile"
+    },
+    {
+      "table": "users",
+      "sourceId": 21398,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 22055,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 24502,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 24543,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 24748,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 26084,
+      "reason": "duplicate hero phone"
+    },
+    {
+      "table": "users",
+      "sourceId": 26408,
+      "reason": "invalid mobile"
+    }
+  ],
+  "warningCount": 62,
+  "warnings": [
+    {
+      "table": "orders",
+      "sourceId": 2038,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "112519317"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2218,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253624.1"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2218,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850916.3"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2225,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253655.0"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2225,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850940.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2242,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851164262"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2263,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851178475"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2338,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851221286"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2557,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "85173045"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2561,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "85080537"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2595,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "85053409"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2600,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850649003"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2652,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "85141233"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2653,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "85095848"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2861,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850544960"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2991,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "231920.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 2991,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "852234.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 4173,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253833.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 4173,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850416.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 5172,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253643.3"
+    },
+    {
+      "table": "orders",
+      "sourceId": 5172,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850858.7"
+    },
+    {
+      "table": "orders",
+      "sourceId": 5938,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "232236.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 5938,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851857.7"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6311,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253530"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6311,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851100"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6510,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253707.7"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6510,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850324.1"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6569,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "232415.4"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6569,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "852050.7"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6608,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "264837.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6608,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "805330.7"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6630,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "265616.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6630,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "805520.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6717,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "265012.1"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6717,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "805611.1"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6887,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253645.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 6887,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851014.4"
+    },
+    {
+      "table": "orders",
+      "sourceId": 7243,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851012696"
+    },
+    {
+      "table": "orders",
+      "sourceId": 7607,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "167903217"
+    },
+    {
+      "table": "orders",
+      "sourceId": 13937,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "265549.4"
+    },
+    {
+      "table": "orders",
+      "sourceId": 13937,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "805528.3"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14760,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253621.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14760,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850900.3"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14797,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253644.6"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14797,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851037.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14901,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253546.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14901,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "850207.1"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14983,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253554.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 14983,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851008.5"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15005,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "253553.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15005,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851117.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15498,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "231656.4"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15498,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851401.9"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15715,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "232428.5"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15715,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851401.2"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15947,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "233041.8"
+    },
+    {
+      "table": "orders",
+      "sourceId": 15947,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851015.0"
+    },
+    {
+      "table": "orders",
+      "sourceId": 16173,
+      "reason": "invalid latitude stored only as raw value",
+      "rawValue": "232156.4"
+    },
+    {
+      "table": "orders",
+      "sourceId": 16173,
+      "reason": "invalid longitude stored only as raw value",
+      "rawValue": "851822.6"
+    },
+    {
+      "table": "tasks",
+      "sourceId": 87599,
+      "reason": "invalid delivery_date preserved",
+      "rawValue": "0000-00-00 00:00:00"
+    },
+    {
+      "table": "wallet_trn",
+      "sourceId": 64865,
+      "reason": "invalid datetime preserved",
+      "rawValue": "0000-00-00 00:00:00"
+    },
+    {
+      "table": "invoices",
+      "sourceId": 5626,
+      "reason": "invalid invoice_date preserved",
+      "rawValue": "0000-11-30"
+    }
+  ]
+}

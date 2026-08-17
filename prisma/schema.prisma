@@ -429,6 +429,7 @@ model Hub {
 
 model DashboardUser {
   id              Int       @id @default(autoincrement())
+  legacyAdminId   Int?      @unique @map("legacy_admin_id")
   username        String    @unique @db.VarChar(50)
   passwordHash    String    @map("password_hash") @db.VarChar(255)
   name            String    @db.VarChar(100)
@@ -553,6 +554,7 @@ model RefreshToken {
 model Hero {
   id              Int       @id @default(autoincrement())
   phone           String    @unique @db.VarChar(15)
+  legacyUserId    Int?      @unique @map("legacy_user_id")
   name            String?   @db.VarChar(100)
   email           String?   @unique @db.VarChar(100)
   gender          Gender?
@@ -1037,6 +1039,7 @@ model ServiceVariant {
 model Customer {
   id              Int       @id @default(autoincrement())
   phone           String    @unique @db.VarChar(15)
+  legacyUserId    Int?      @unique @map("legacy_user_id")
   alternatePhone  String?   @map("alternate_phone") @db.VarChar(15)
   name            String?   @db.VarChar(100)
   email           String?   @unique @db.VarChar(100)
@@ -1192,6 +1195,7 @@ model CustomerAddress {
 model Booking {
   id                  Int           @id @default(autoincrement())
   bookingNo           String        @unique @map("booking_no") @db.VarChar(30)
+  legacyOrderId       Int?          @unique @map("legacy_order_id")
   customerId          Int?          @map("customer_id")
   customerAddressId   Int?          @map("customer_address_id")
   cityId              Int           @map("city_id")
@@ -1241,6 +1245,9 @@ model Booking {
   serviceAddress   String   @map("service_address") @db.Text
   latitude         Decimal? @db.Decimal(10, 8)
   longitude        Decimal? @db.Decimal(11, 8)
+  legacyRawLatitude  String? @map("legacy_raw_latitude") @db.VarChar(50)
+  legacyRawLongitude String? @map("legacy_raw_longitude") @db.VarChar(50)
+  legacyRawItems     Json?   @map("legacy_raw_items")
 
   scheduledDate          DateTime? @map("scheduled_date") @db.Date
   scheduledFromTime      String?   @map("scheduled_from_time") @db.VarChar(5)
@@ -1368,9 +1375,11 @@ enum LegacyTaskStatus {
 
 model LegacyBookingVisit {
   id                Int              @id @default(autoincrement())
-  bookingId         Int              @map("booking_id")
+  bookingId         Int?             @map("booking_id")
+  legacyOrderId     Int              @map("legacy_order_id")
   sourceTaskId      Int              @unique @map("source_task_id")
-  visitDate         DateTime         @map("visit_date") @db.Date
+  visitDate         DateTime?        @map("visit_date") @db.Date
+  rawVisitDate      String?          @map("raw_visit_date") @db.VarChar(30)
   status            LegacyTaskStatus
   rawStatus         String           @map("raw_status") @db.VarChar(30)
   transType         String?          @map("trans_type") @db.VarChar(10)
@@ -1381,7 +1390,7 @@ model LegacyBookingVisit {
   isHistorical      Boolean          @default(true) @map("is_historical")
   importedAt        DateTime         @default(now()) @map("imported_at")
 
-  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking     Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   matchedHero Hero?   @relation(fields: [matchedHeroId], references: [id])
 
   @@index([bookingId])
@@ -1407,6 +1416,7 @@ model LegacyCustomerAddress {
   rawLat          String?   @map("raw_lat") @db.VarChar(50)
   rawLng          String?   @map("raw_lng") @db.VarChar(50)
   sourceAddressId Int       @unique @map("source_address_id")
+  legacyUserId    Int       @map("legacy_user_id")
   sourceCreatedAt DateTime? @map("source_created_at")
   importedAt      DateTime  @default(now()) @map("imported_at")
 
@@ -1441,9 +1451,11 @@ model LegacyWalletTransaction {
   trnType  LegacyWalletTrnType @map("trn_type")
   action   String  @db.VarChar(2)
   amount   Decimal @db.Decimal(10, 2)
-  occurredAt DateTime @map("occurred_at")
+  occurredAt DateTime? @map("occurred_at")
+  rawOccurredAt String? @map("raw_occurred_at") @db.VarChar(30)
   legacyOrderId Int? @map("legacy_order_id")
   legacyTaskId  Int? @map("legacy_task_id")
+  legacyDriverId Int? @map("legacy_driver_id")
   wasSoftDeleted Boolean @default(false) @map("was_soft_deleted")
   description String? @db.Text
   importedAt DateTime @default(now()) @map("imported_at")
@@ -1501,7 +1513,8 @@ model LegacyContentItem {
 // this is a one-to-many relation, not a 1:1 snapshot.
 model LegacyInvoiceSnapshot {
   id                  Int       @id @default(autoincrement())
-  bookingId           Int       @map("booking_id")
+  bookingId           Int?      @map("booking_id")
+  legacyOrderId       Int?      @map("legacy_order_id")
   sourceInvoiceId     Int       @unique @map("source_invoice_id")
   legacyInvoiceNumber String?   @map("legacy_invoice_number") @db.VarChar(50)
   subTotal            Decimal   @map("sub_total") @db.Decimal(11, 2)
@@ -1513,6 +1526,7 @@ model LegacyInvoiceSnapshot {
   paymentMode          String?  @map("payment_mode") @db.VarChar(30)
   payRef               String?  @map("pay_ref") @db.VarChar(255)
   invoiceDate          DateTime? @map("invoice_date") @db.Date
+  rawInvoiceDate       String?   @map("raw_invoice_date") @db.VarChar(30)
   billingName          String?  @map("billing_name") @db.VarChar(255)
   billingAddress       String?  @map("billing_address") @db.Text
   // Real per-line-item breakdown from the legacy invoice — deliberately not
@@ -1524,7 +1538,7 @@ model LegacyInvoiceSnapshot {
   rawActivityLog       Json?    @map("raw_activity_log")
   importedAt           DateTime @default(now()) @map("imported_at")
 
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
   @@index([bookingId])
   @@map("legacy_invoice_snapshots")

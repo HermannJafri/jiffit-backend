@@ -37,5 +37,17 @@ export function pickServiceableHub(latitude: number, longitude: number, hubs: Hu
       distance: haversineDistance(latitude, longitude, Number(hub.latitude), Number(hub.longitude)),
     }))
     .filter((hub) => Number.isFinite(hub.distance) && hub.distance <= hub.serviceRadiusMeters)
-    .sort((a, b) => a.distance - b.distance)[0] ?? null;
+    .sort((a, b) => a.distance - b.distance || a.id - b.id)[0] ?? null;
+}
+
+export function missingServiceIdsAtLocation(
+  latitude: number,
+  longitude: number,
+  hubs: Array<HubLocation & { offeredServiceIds: number[] }>,
+  serviceIds: number[],
+): number[] {
+  return serviceIds.filter((serviceId) => {
+    const offering = hubs.filter((hub) => hub.offeredServiceIds.includes(serviceId));
+    return !pickServiceableHub(latitude, longitude, offering);
+  });
 }
