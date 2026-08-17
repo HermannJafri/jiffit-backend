@@ -14,7 +14,7 @@ Rules preserved:
 4. Same-day after shift start: clamp pool to **actual check-ins**.
 5. Buffer minutes from `app_settings.booking.bufferMinutes` (default 15).
 6. Duration from catalog (variant then service), **quantity multiplies time**.
-7. Overtime quotes from `IncentivePlan(OVERTIME)` are **not wired yet** — in-shift slots only until the incentives module lands.
+7. Overtime quotes from `IncentivePlan(OVERTIME)`: hub-scoped plan first, then state-scoped. In-shift only if no plan exists.
 8. Timezone: IST (`+05:30`). Persist `slotStartAt` / `slotEndAt` as DateTime.
 9. First bookable slot is shift start + 30 minutes; same-day minimum advance is 60 minutes; 15-minute grid; no overnight spill.
 

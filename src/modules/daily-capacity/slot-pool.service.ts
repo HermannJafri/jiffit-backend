@@ -36,6 +36,24 @@ export interface PoolAvailabilityResult {
   slots: SlotResult[];
 }
 
+async function getOvertimeRatePerHour(hubId: number): Promise<number | null> {
+  const hubPlan = await prisma.incentivePlan.findFirst({
+    where: { planType: 'OVERTIME', isActive: true, scope: 'HUB', hubId },
+    select: { overtimeRatePerHour: true },
+  });
+  if (hubPlan) return Number(hubPlan.overtimeRatePerHour);
+  const hub = await prisma.hub.findUnique({
+    where: { id: hubId },
+    select: { city: { select: { stateId: true } } },
+  });
+  if (!hub?.city.stateId) return null;
+  const statePlan = await prisma.incentivePlan.findFirst({
+    where: { planType: 'OVERTIME', isActive: true, scope: 'STATE', stateId: hub.city.stateId },
+    select: { overtimeRatePerHour: true },
+  });
+  return statePlan ? Number(statePlan.overtimeRatePerHour) : null;
+}
+
 async function getBufferMinutes(): Promise<number> {
   const setting = await prisma.appSetting.findUnique({
     where: { key: 'booking.bufferMinutes' },
@@ -280,6 +298,7 @@ export async function getPoolSlotAvailability(
 
   const activeBookings = await getActiveBookings(hub.id, groupId, dateStr);
   const baseDateMs = new Date(`${dateStr}T00:00:00+05:30`).getTime();
+  const overtimeRatePerHour = options.overtimeRatePerHour ?? (await getOvertimeRatePerHour(hub.id));
   const allSlots: SlotResult[] = [];
 
   for (const shift of effectiveShifts) {
@@ -302,7 +321,7 @@ export async function getPoolSlotAvailability(
         activeBookings: bookingsRelevantToShift(activeBookings, baseDateMs, shiftStartMin),
         baseDateMs,
         bufferMinutes,
-        overtimeRatePerHour: options.overtimeRatePerHour,
+        overtimeRatePerHour,
       }),
     );
   }

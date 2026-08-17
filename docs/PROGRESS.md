@@ -53,7 +53,7 @@ See `docs/00-index.md` for the full index.
 | Customer addresses | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
 | Geography (states/cities/hubs) | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
 | Booking engine | IMPLEMENTED / PARTIALLY TESTED (unit tests; needs MySQL for API integration) |
-| Scheduling / capacity | IMPLEMENTED / PARTIALLY TESTED (pool core unit-tested; overtime quotes and live ETA overlay not yet) |
+| Scheduling / capacity | IMPLEMENTED / PARTIALLY TESTED (pool core unit-tested; overtime IncentivePlan lookup wired) |
 | Hero assignment / ETA dispatch | IMPLEMENTED / PARTIALLY TESTED (unit tests; live Google ETA BLOCKED BY CREDENTIAL; FCM enqueue only) |
 | Capacity groups / daily pools | IMPLEMENTED AND TESTED (CRUD + slot pool already using these tables) |
 | Zoho payments | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL (HMAC, quote hash, webhook, mock pay, provider client) |
@@ -81,7 +81,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Remaining polish: live MySQL integration tests, Google Maps/FCM/Zoho/Spaces live verification, Dashboard HR/map/support, Expo camera/maps polish, migration apply against staging MySQL.
+Exact next task: add Dashboard HR screens (attendance/leaves) once those APIs exist, then run the stack against local MySQL.
 
 ---
 
