@@ -95,3 +95,49 @@ export async function listCustomers(filter: { q?: string; page?: number; limit?:
   ]);
   return { total, page, limit, customers };
 }
+
+export async function listAttendance(filter: { hubId?: number; page?: number; limit?: number }) {
+  const page = filter.page ?? 1;
+  const limit = Math.min(filter.limit ?? 20, 100);
+  const where = filter.hubId ? { hubId: filter.hubId } : {};
+  const [total, rows] = await Promise.all([
+    prisma.heroAttendance.count({ where }),
+    prisma.heroAttendance.findMany({
+      where,
+      orderBy: { checkedInAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        hero: { select: { id: true, name: true, phone: true } },
+        hub: { select: { id: true, name: true } },
+      },
+    }),
+  ]);
+  return { total, page, limit, attendance: rows };
+}
+
+export async function listLeaves(filter: { status?: string; page?: number; limit?: number }) {
+  const page = filter.page ?? 1;
+  const limit = Math.min(filter.limit ?? 20, 100);
+  const where = filter.status ? { status: filter.status as 'PENDING' | 'APPROVED' | 'REJECTED' } : {};
+  const [total, rows] = await Promise.all([
+    prisma.heroLeave.count({ where }),
+    prisma.heroLeave.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { hero: { select: { id: true, name: true, phone: true } } },
+    }),
+  ]);
+  return { total, page, limit, leaves: rows };
+}
+
+export async function reviewLeave(id: number, actorId: number, status: 'APPROVED' | 'REJECTED', note?: string) {
+  const leave = await prisma.heroLeave.findUnique({ where: { id } });
+  if (!leave) throw new AppError(404, 'Leave not found', 'NOT_FOUND');
+  return prisma.heroLeave.update({
+    where: { id },
+    data: { status, reviewedById: actorId, reviewedAt: new Date(), reviewNote: note },
+  });
+}

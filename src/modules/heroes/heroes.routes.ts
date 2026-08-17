@@ -12,6 +12,43 @@ heroesRouter.use(authenticate(['dashboard']));
 const canWrite = requireRoles('SUPER_ADMIN', 'ADMIN', 'HR');
 
 heroesRouter.get(
+  '/attendance',
+  asyncRoute(async (req, res) => {
+    ok(
+      res,
+      await heroes.listAttendance({
+        hubId: req.query.hubId ? Number(req.query.hubId) : undefined,
+        page: req.query.page ? Number(req.query.page) : undefined,
+        limit: req.query.limit ? Number(req.query.limit) : undefined,
+      }),
+    );
+  }),
+);
+
+heroesRouter.get(
+  '/leaves',
+  asyncRoute(async (req, res) => {
+    ok(
+      res,
+      await heroes.listLeaves({
+        status: typeof req.query.status === 'string' ? req.query.status : undefined,
+        page: req.query.page ? Number(req.query.page) : undefined,
+        limit: req.query.limit ? Number(req.query.limit) : undefined,
+      }),
+    );
+  }),
+);
+
+heroesRouter.patch(
+  '/leaves/:id',
+  canWrite,
+  validate(z.object({ status: z.enum(['APPROVED', 'REJECTED']), note: z.string().trim().max(500).optional() })),
+  asyncRoute(async (req, res) => {
+    ok(res, await heroes.reviewLeave(Number(req.params.id), req.auth!.id, req.body.status, req.body.note));
+  }),
+);
+
+heroesRouter.get(
   '/',
   asyncRoute(async (req, res) => {
     ok(

@@ -81,7 +81,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Exact next task: add Dashboard HR screens (attendance/leaves) once those APIs exist, then run the stack against local MySQL.
+Exact next task: point DATABASE_URL at local MySQL, migrate+seed, then exercise Dashboard/Customer/Hero against the API.
 
 ---
 
