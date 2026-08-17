@@ -1,0 +1,57 @@
+{
+  "name": "jiffit-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jiffit production API — customers, heroes, operations dashboard",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "test": "npm run build && node scripts/run-tests.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "ts-node --transpile-only prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": ["jiffit"],
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1050.0",
+    "@prisma/client": "^5.22.0",
+    "axios": "^1.16.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "node-cron": "^4.4.1",
+    "sharp": "^0.34.5",
+    "socket.io": "^4.8.3",
+    "uuid": "^14.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^22.15.3",
+    "@types/node-cron": "^3.0.11",
+    "nodemon": "^3.1.14",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,13 @@
+export const OTP_EXPIRY_MINUTES = 10;
+export const OTP_LENGTH = 6;
+export const OTP_RESEND_SECONDS = 30;
+export const OTP_REQUEST_WINDOW_MINUTES = 15;
+export const OTP_MAX_REQUESTS_PER_PHONE = 5;
+export const OTP_MAX_REQUESTS_PER_IP = 20;
+export const OTP_MAX_REQUESTS_PER_DEVICE = 10;
+export const OTP_MAX_VERIFY_ATTEMPTS = 5;
+export const OTP_LOCKOUT_MINUTES = 15;
+
+export const BOOKING_ACCEPT_TIMEOUT_SECONDS = 60;
+export const BOOKING_MAX_AUTO_ASSIGN_ATTEMPTS = 3;
+export const HUB_CHECKIN_RADIUS_METERS = 500;

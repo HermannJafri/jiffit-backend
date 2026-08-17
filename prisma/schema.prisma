@@ -1,0 +1,3067 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum DashboardRole {
+  SUPER_ADMIN
+  ADMIN
+  HR
+  OPERATIONS
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum HeroStatus {
+  INCOMPLETE
+  PENDING_APPROVAL
+  VERIFIED
+  SUSPENDED
+  REJECTED
+}
+
+enum HeroDutyStatus {
+  OFFLINE
+  ONLINE
+  BUSY
+}
+
+enum HeroLocationMode {
+  DUTY
+  ACTIVE_BOOKING
+}
+
+enum HeroLocationSource {
+  REST
+  SOCKET
+  FOREGROUND_SERVICE
+  ACTIVE_ROUTE
+}
+
+enum HeroLocationOrigin {
+  GPS
+  NETWORK
+  FUSED
+  UNKNOWN
+}
+
+enum DocumentType {
+  AADHAR
+  PAN
+  DRIVING_LICENSE
+  SELFIE
+  OTHER
+}
+
+enum HeroLanguage {
+  ENGLISH
+  HINDI
+  HINGLISH
+}
+
+enum WorkType {
+  HELPER
+  BIKE_RIDER
+}
+
+enum VehicleType {
+  CYCLE
+  BIKE
+  ELECTRIC_BIKE
+  NO_VEHICLE
+  COMPANY_EV
+}
+
+enum EarningsType {
+  SALARY
+  COMMISSION
+}
+
+enum OnboardingSource {
+  MOBILE_APP
+  DASHBOARD
+  REFERRAL
+  WALK_IN
+}
+
+enum HeroLeaveType {
+  SICK
+  CASUAL
+  EMERGENCY
+  OTHER
+}
+
+enum HeroLeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum BookingTeamRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum BookingTeamMemberStatus {
+  ACTIVE
+  COMPLETED
+  REMOVED
+}
+
+// ── Phase 1 enums ─────────────────────────────────────────────────────────────
+
+enum BookingType {
+  SINGLE
+  SUBSCRIPTION
+}
+
+enum BookingStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PENDING_ASSIGNMENT
+  ASSIGNED
+  ACCEPTED
+  ON_THE_WAY
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  ON_HOLD
+  // Historical only — legacy orders imported in a non-terminal legacy status
+  // (NEW_BOOKING/PENDING_QUOTE/WORK_DONE/RUNNING/HOLD; see Booking.legacyOriginalStatus
+  // for which one). Treated as terminal by assertBookingTransition, identical
+  // to CANCELLED/REFUNDED, so no actor can ever transition into or out of it.
+  LEGACY_ARCHIVED
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  REJECTED
+  STARTED
+  COMPLETED
+  CANCELLED
+  REASSIGNED
+}
+
+enum DispatchState {
+  PLANNED
+  PREFLIGHT_READY
+  OFFER_PENDING
+  RETRY_WAIT
+  HERO_ACCEPTED
+  TEAM_INCOMPLETE
+  TEAM_READY
+  ESCALATED
+  FAILED
+  CANCELLED
+}
+
+enum DispatchParticipantRole {
+  PRIMARY
+  HELPER
+  RIDER
+  SPECIALIST
+}
+
+enum DispatchParticipantState {
+  PLANNED
+  OFFER_PENDING
+  ACCEPTED
+  RETRY_WAIT
+  ESCALATED
+  CANCELLED
+}
+
+enum OfferAttemptState {
+  PENDING
+  DELIVERED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+enum DispatchOutboxState {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+  RAZORPAY
+  OTHER
+}
+
+enum PaymentEnvironment {
+  SANDBOX
+  LIVE
+}
+
+enum PaymentProvider {
+  ZOHO
+}
+
+enum PaymentSubjectType {
+  BOOKING
+  PACKAGE_PURCHASE
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  ATTEMPT_CREATING
+  AWAITING_CUSTOMER
+  PROCESSING
+  PAID
+  CREATION_FAILED
+  FAILED
+  EXPIRED
+  CANCELED
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum PaymentAttemptStatus {
+  CREATING
+  AWAITING_CUSTOMER
+  PROCESSING
+  PAID
+  FAILED
+  EXPIRED
+  CANCELED
+  SUPERSEDED
+}
+
+enum PaymentWebhookProcessingStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  QUARANTINED
+  FAILED
+}
+
+enum PaymentAuditActorType {
+  SYSTEM
+  CUSTOMER
+  HERO
+  DASHBOARD
+  WEBHOOK
+  RECONCILER
+}
+
+enum DiscountType {
+  FLAT
+  PERCENTAGE
+}
+
+enum InvoiceStatus {
+  CREATED
+  SENT
+  PAID
+  VOID
+  OVERDUE
+}
+
+enum CapacityPlanStatus {
+  DRAFT
+  PUBLISHED
+  LOCKED
+}
+
+enum CapacityShiftType {
+  MORNING
+  GENERAL
+}
+
+enum RouteLineStatus {
+  OPEN
+  ASSIGNED
+  AT_RISK
+  CLOSED
+  CANCELLED
+}
+
+enum RouteReservationRole {
+  PRIMARY
+  SUPPORT
+}
+
+enum RouteReservationStatus {
+  ACTIVE
+  RELEASED
+  SUPERSEDED
+}
+
+// ─── Role Definitions ─────────────────────────────────────────────────────────
+
+model RoleDefinition {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("role_definitions")
+}
+
+// ─── Geography ────────────────────────────────────────────────────────────────
+
+model State {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  code      String   @unique @db.VarChar(5)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cities              City[]
+  holidays            Holiday[]
+  operationalSettings OperationalSetting[]
+  workSchedules       WorkSchedule[]
+  incentivePlans      IncentivePlan[]
+
+  @@map("states")
+}
+
+model City {
+  id                Int      @id @default(autoincrement())
+  stateId           Int      @map("state_id")
+  name              String   @db.VarChar(100)
+  imageUrl          String?  @map("image_url") @db.VarChar(500) // Phase 0 addition — for customer app city picker
+  // Per-city override for "stop accepting new bookings after HH:mm" — falls
+  // back to the global AppSetting('booking.cutoffTime') when null. Hubs
+  // aren't given their own cutoff because a booking has no hub until a hero
+  // is assigned after it's already placed — city is the earliest point at
+  // which this is actually known.
+  bookingCutoffTime String?  @map("booking_cutoff_time") @db.VarChar(5)
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  state               State                    @relation(fields: [stateId], references: [id])
+  hubs                Hub[]
+  heroes              Hero[]
+  dashboardUsers      DashboardUser[]
+  dashboardUserScopes DashboardUserCityScope[]
+  customerAddresses   CustomerAddress[]
+  bookings            Booking[]
+  invoices            Invoice[]
+  coupons             Coupon[]
+
+  @@index([stateId])
+  @@map("cities")
+}
+
+model Hub {
+  id                  Int      @id @default(autoincrement())
+  cityId              Int      @map("city_id")
+  name                String   @db.VarChar(100)
+  address             String   @db.Text
+  latitude            String   @db.VarChar(20)
+  longitude           String   @db.VarChar(20)
+  checkinRadiusMeters Int      @default(500) @map("checkin_radius_meters")
+  serviceRadiusMeters Int      @default(10000) @map("service_radius_meters")
+  managerId           Int?     @map("manager_id")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  city                City                       @relation(fields: [cityId], references: [id])
+  manager             DashboardUser?             @relation("HubManager", fields: [managerId], references: [id])
+  heroes              Hero[]
+  attendance          HeroAttendance[]
+  staff               DashboardUser[]            @relation("HubStaff")
+  dashboardUserScopes DashboardUserHubScope[]
+  operationalSettings OperationalSetting[]
+  workSchedules       WorkSchedule[]
+  incentivePlans      IncentivePlan[]
+  serviceAvailability HubServiceAvailability[]
+  capacityPlans       ServiceGroupCapacityPlan[]
+  dailyCapacities     DailyHeroCapacity[]
+  capacityGroups      BookingCapacityGroup[]
+
+  @@index([cityId])
+  @@map("hubs")
+}
+
+// ─── Dashboard Users ──────────────────────────────────────────────────────────
+
+model DashboardUser {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique @db.VarChar(50)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  name            String    @db.VarChar(100)
+  email           String?   @unique @db.VarChar(100)
+  phone           String?   @unique @db.VarChar(15)
+  alternatePhone  String?   @map("alternate_phone") @db.VarChar(15)
+  employeeCode    String?   @unique @map("employee_code") @db.VarChar(20)
+  dateOfBirth     DateTime? @map("date_of_birth") @db.Date
+  profilePhotoUrl String?   @map("profile_photo_url") @db.VarChar(500)
+  bankAccountNumber String? @map("bank_account_number") @db.VarChar(30)
+  bankIfsc          String? @map("bank_ifsc") @db.VarChar(15)
+  panCardUrl        String? @map("pan_card_url") @db.VarChar(500)
+  aadhaarCardUrl    String? @map("aadhaar_card_url") @db.VarChar(500)
+  // Role is now a free string referencing RoleDefinition.name (built-in + custom).
+  // The DashboardRole enum below stays as a source of built-in role-name constants.
+  role            String    @default("OPERATIONS") @db.VarChar(50)
+  cityId          Int?      @map("city_id")
+  hubId           Int?      @map("hub_id")
+  designation     String?   @db.VarChar(100)
+  department      String?   @db.VarChar(100)
+  monthlySalary   Decimal?  @map("monthly_salary") @db.Decimal(10, 2)
+  address         String?   @db.Text
+  joiningDate     DateTime? @map("joining_date") @db.Date
+  endDate         DateTime? @map("end_date") @db.Date
+  createdById     Int?      @map("created_by_id")
+  isActive        Boolean   @default(true) @map("is_active")
+  lastLoginAt     DateTime? @map("last_login_at")
+  // Additive — forces the login flow to require a password change before any
+  // other action. Always true for bulk-imported legacy accounts (which never
+  // receive an imported password); also usable for any future admin-initiated
+  // reset flow that should require the user to set their own new password.
+  mustResetPassword Boolean @default(false) @map("must_reset_password")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  city                   City?                  @relation(fields: [cityId], references: [id])
+  hub                    Hub?                   @relation("HubStaff", fields: [hubId], references: [id])
+  createdBy              DashboardUser?         @relation("EmployeeCreator", fields: [createdById], references: [id])
+  createdUsers           DashboardUser[]        @relation("EmployeeCreator")
+  managedHubs            Hub[]                  @relation("HubManager")
+  verifiedHeroes         Hero[]                 @relation("HeroVerifier")
+  createdHeroes          Hero[]                 @relation("HeroCreator")
+  refreshTokens          RefreshToken[]
+  bookedBookings         Booking[]              @relation("BookingCreator")
+  assignedBookings       BookingAssignment[]    @relation("Assigner")
+  recordedPayments       Payment[]
+  statusChanges          BookingStatusHistory[]
+  reviewedLeaves         HeroLeave[]            @relation("LeaveReviewer")
+  reviewedOffDayRequests OffDayWorkRequest[]    @relation("OffDayReviewer")
+  socialPosts            SocialPost[]
+  trainingVideos         TrainingVideo[]
+  certificates           HeroCertificate[]      @relation("CertificateCreator")
+  shopProducts           ShopProduct[]
+  faqs                   Faq[]
+  supportMessages        SupportChatMessage[]
+  heroLocationAccessLogs HeroLocationAccessAudit[]
+
+  // HRA relations
+  hraAttendance          DashboardUserAttendance[]
+  hraLeavesSubmitted     DashboardUserLeave[]       @relation("HraLeaveOwner")
+  hraLeavesReviewed      DashboardUserLeave[]       @relation("HraLeaveReviewer")
+  hraAnnouncements       Announcement[]             @relation("AnnouncementAuthor")
+  loginLogs              DashboardLoginLog[]
+  cityScopes             DashboardUserCityScope[]
+  hubScopes              DashboardUserHubScope[]
+  capacityPlansCreated   ServiceGroupCapacityPlan[] @relation("CapacityPlanCreator")
+  capacityPlansUpdated   ServiceGroupCapacityPlan[] @relation("CapacityPlanUpdater")
+  capacityPlansPublished ServiceGroupCapacityPlan[] @relation("CapacityPlanPublisher")
+  capacityPlansLocked    ServiceGroupCapacityPlan[] @relation("CapacityPlanLocker")
+  dailyHeroCapacitiesSet DailyHeroCapacity[]        @relation("DailyCapacitySetBy")
+  capacityGroupsCreated  BookingCapacityGroup[]     @relation("CapacityGroupCreatedBy")
+  capacityDailySet       BookingCapacityDaily[]     @relation("CapacityDailySetBy")
+
+  @@index([cityId])
+  @@index([hubId])
+  @@index([role])
+  @@map("dashboard_users")
+}
+
+model DashboardUserCityScope {
+  id              Int @id @default(autoincrement())
+  dashboardUserId Int @map("dashboard_user_id")
+  cityId          Int @map("city_id")
+
+  dashboardUser DashboardUser @relation(fields: [dashboardUserId], references: [id], onDelete: Cascade)
+  city          City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([dashboardUserId, cityId])
+  @@index([cityId])
+  @@map("dashboard_user_city_scopes")
+}
+
+model DashboardUserHubScope {
+  id              Int @id @default(autoincrement())
+  dashboardUserId Int @map("dashboard_user_id")
+  hubId           Int @map("hub_id")
+
+  dashboardUser DashboardUser @relation(fields: [dashboardUserId], references: [id], onDelete: Cascade)
+  hub           Hub           @relation(fields: [hubId], references: [id], onDelete: Cascade)
+
+  @@unique([dashboardUserId, hubId])
+  @@index([hubId])
+  @@map("dashboard_user_hub_scopes")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tokenHash String   @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user DashboardUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ─── Heroes ───────────────────────────────────────────────────────────────────
+
+model Hero {
+  id              Int       @id @default(autoincrement())
+  phone           String    @unique @db.VarChar(15)
+  name            String?   @db.VarChar(100)
+  email           String?   @unique @db.VarChar(100)
+  gender          Gender?
+  dateOfBirth     DateTime? @map("date_of_birth") @db.Date
+  profilePhotoUrl String?   @map("profile_photo_url") @db.VarChar(500)
+
+  addressLine1  String?  @map("address_line1") @db.VarChar(255)
+  addressLine2  String?  @map("address_line2") @db.VarChar(255)
+  pincode       String?  @db.VarChar(10)
+  homeLatitude  Decimal? @map("home_latitude") @db.Decimal(10, 8)
+  homeLongitude Decimal? @map("home_longitude") @db.Decimal(11, 8)
+
+  // Personal & document fields (Phase 0)
+  aadhaarNumber         String? @map("aadhaar_number") @db.VarChar(20)
+  panNumber             String? @map("pan_number") @db.VarChar(20)
+  emergencyContactName  String? @map("emergency_contact_name") @db.VarChar(100)
+  emergencyContactPhone String? @map("emergency_contact_phone") @db.VarChar(15)
+  whatsappOptIn         Boolean @default(true) @map("whatsapp_opt_in")
+
+  bankAccountName   String? @map("bank_account_name") @db.VarChar(100)
+  bankAccountNumber String? @map("bank_account_number") @db.VarChar(30)
+  bankIfsc          String? @map("bank_ifsc") @db.VarChar(15)
+  // Additive — same copy-pasted HR-style field as legacy admin.gst_no,
+  // length matches its varchar(15). See migration-docs/prompt6-plan.md Task H.
+  gstNumber         String? @map("gst_no") @db.VarChar(15)
+  // Additive — set true for every hero whose bank/KYC data comes from the
+  // legacy bulk import rather than the normal V2 onboarding review flow.
+  // HR-facing filter only; never read by payout/dispatch logic. Same
+  // precedent as Hero.needsSpotCheck above.
+  bankDetailsNeedsReview Boolean @default(false) @map("bank_details_needs_review")
+
+  cityId Int? @map("city_id")
+  hubId  Int? @map("hub_id")
+
+  status                   HeroStatus     @default(INCOMPLETE)
+  dutyStatus               HeroDutyStatus @default(OFFLINE) @map("duty_status")
+  connectivityStatus       HeroConnectivityStatus @default(OFFLINE) @map("connectivity_status")
+  currentLat               Decimal?       @map("current_lat") @db.Decimal(10, 8)
+  currentLng               Decimal?       @map("current_lng") @db.Decimal(11, 8)
+  currentLocationUpdatedAt DateTime?      @map("current_location_updated_at") @db.DateTime(3)
+
+  verifiedAt      DateTime? @map("verified_at")
+  verifiedById    Int?      @map("verified_by_id")
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  createdById     Int?      @map("created_by_id")
+
+  // Additive — true only for heroes bulk-verified from a confirmed-active
+  // legacy account rather than through the normal V2 onboarding/document
+  // review flow. Never read by dispatch/eligibility logic (which already only
+  // checks status == VERIFIED); exists purely so operations/HR can see,
+  // filter, and prioritize this cohort for a real one-time spot-check.
+  // Auto-clears when an operator verifies/re-verifies the hero through the
+  // existing Verify action.
+  needsSpotCheck Boolean @default(false) @map("needs_spot_check")
+
+  fatherName       String?           @map("father_name") @db.VarChar(100)
+  alternatePhone   String?           @unique @map("alternate_phone") @db.VarChar(15)
+  language         HeroLanguage?
+  workType         WorkType?         @map("work_type")
+  vehicleType      VehicleType?      @map("vehicle_type")
+  earningsType     EarningsType?     @map("earnings_type")
+  onboardingSource OnboardingSource? @map("onboarding_source")
+  upiId            String?           @map("upi_id") @db.VarChar(100)
+
+  referralCode     String? @unique @map("referral_code") @db.VarChar(20)
+  referredByHeroId Int?    @map("referred_by_hero_id")
+
+  isBlacklisted   Boolean   @default(false) @map("is_blacklisted")
+  blacklistReason String?   @map("blacklist_reason") @db.Text
+  blacklistedAt   DateTime? @map("blacklisted_at")
+
+  deviceToken        String?      @map("device_token") @db.VarChar(500)
+  locationPermission Boolean      @default(false) @map("location_permission")
+  devices            HeroDevice[]
+
+  rating        Decimal @default(0.00) @db.Decimal(3, 2)
+  totalRatings  Int     @default(0) @map("total_ratings")
+  totalBookings Int     @default(0) @map("total_bookings")
+
+  // HR: monthly salary for payroll (used when earningsType = SALARY)
+  monthlySalary        Decimal? @map("monthly_salary") @db.Decimal(10, 2)
+  // HR: commission rate, e.g. 15.00 = 15% of each completed booking's payableTotal
+  // (used when earningsType = COMMISSION; ignored otherwise)
+  commissionPercentage Decimal? @map("commission_percentage") @db.Decimal(5, 2)
+
+  isActive          Boolean   @default(true) @map("is_active")
+  deletedAt         DateTime? @map("deleted_at")
+  deleteRequestedAt DateTime? @map("delete_requested_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  city                        City?                        @relation(fields: [cityId], references: [id])
+  hub                         Hub?                         @relation(fields: [hubId], references: [id])
+  verifiedBy                  DashboardUser?               @relation("HeroVerifier", fields: [verifiedById], references: [id])
+  createdBy                   DashboardUser?               @relation("HeroCreator", fields: [createdById], references: [id])
+  referredByHero              Hero?                        @relation("HeroReferral", fields: [referredByHeroId], references: [id])
+  referredHeroes              Hero[]                       @relation("HeroReferral")
+  documents                   HeroDocument[]
+  jobRoles                    HeroJobRole[]
+  skills                      HeroSkill[]
+  attendance                  HeroAttendance[]
+  refreshTokens               HeroRefreshToken[]
+  assignments                 BookingAssignment[]
+  assignedBookings            Booking[]                    @relation("AssignedHero")
+  partnerBookings             Booking[]                    @relation("BookingPartner")
+  legacyAssignedBookings       Booking[]                    @relation("LegacyAssignedHero")
+  statusChanges               BookingStatusHistory[]
+  leaves                      HeroLeave[]
+  offDayWorkRequests          OffDayWorkRequest[]
+  teamOwnerships              HeroTeamMember[]             @relation("TeamOwner")
+  teamMemberships             HeroTeamMember[]             @relation("TeamMember")
+  invitationsSent             HeroTeamInvitation[]         @relation("InvitationsSent")
+  invitationsReceived         HeroTeamInvitation[]         @relation("InvitationsReceived")
+  bookingTeamRequestsSent     BookingTeamRequest[]         @relation("BookingTeamRequestsSent")
+  bookingTeamRequestsReceived BookingTeamRequest[]         @relation("BookingTeamRequestsReceived")
+  bookingTeamMemberships      BookingTeamMember[]
+  bookingTeamMembersInvited   BookingTeamMember[]          @relation("BookingTeamMemberInviter")
+  socialPosts                 SocialPost[]
+  certificates                HeroCertificate[]
+  walletTransactions          HeroWalletTransaction[]
+  supportThreads              SupportChatThread[]
+  bookingReviews              BookingReview[]
+  connectivityLogs            HeroConnectivityLog[]
+  referralBonusPaidAt         DateTime?                    @map("referral_bonus_paid_at")
+  capacityRouteLines          ServiceGroupRouteLine[]
+  dispatchOfferAttempts       BookingOfferAttempt[]
+  acceptedDispatchSlots       BookingDispatchParticipant[]
+  latestLocation              HeroLatestLocation?
+  locationAccessLogs          HeroLocationAccessAudit[]
+  legacyBookingVisits         LegacyBookingVisit[]
+  legacyWalletTransactions    LegacyWalletTransaction[]
+
+  @@index([phone])
+  @@index([cityId])
+  @@index([hubId])
+  @@index([status])
+  @@index([isBlacklisted])
+  @@index([referralCode])
+  @@map("heroes")
+}
+
+model HeroDevice {
+  id             Int      @id @default(autoincrement())
+  installationId String   @unique @map("installation_id") @db.VarChar(100)
+  heroId         Int      @map("hero_id")
+  fcmToken       String   @unique @map("fcm_token") @db.VarChar(500)
+  platform       String?  @db.VarChar(30)
+  createdAt      DateTime @default(now()) @map("created_at")
+  lastSeenAt     DateTime @updatedAt @map("last_seen_at")
+
+  hero Hero @relation(fields: [heroId], references: [id], onDelete: Cascade)
+
+  @@index([heroId])
+  @@map("hero_devices")
+}
+
+model HeroDocument {
+  id         Int          @id @default(autoincrement())
+  heroId     Int          @map("hero_id")
+  type       DocumentType
+  number     String?      @db.VarChar(50)
+  frontUrl   String?      @map("front_url") @db.VarChar(500)
+  backUrl    String?      @map("back_url") @db.VarChar(500)
+  isVerified Boolean      @default(false) @map("is_verified")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  hero Hero @relation(fields: [heroId], references: [id], onDelete: Cascade)
+
+  @@unique([heroId, type])
+  @@index([heroId])
+  @@map("hero_documents")
+}
+
+// selfieUrl is nullable until file upload is implemented
+model HeroAttendance {
+  id                Int       @id @default(autoincrement())
+  heroId            Int       @map("hero_id")
+  hubId             Int       @map("hub_id")
+  selfieUrl         String?   @map("selfie_url") @db.VarChar(500)
+  checkOutSelfieUrl String?   @map("check_out_selfie_url") @db.VarChar(500)
+  latitude          Decimal   @db.Decimal(10, 8)
+  longitude         Decimal   @db.Decimal(11, 8)
+  distanceMeters    Int       @map("distance_meters")
+  checkedInAt       DateTime  @map("checked_in_at")
+  checkedOutAt      DateTime? @map("checked_out_at")
+  checkoutReason    String?   @map("checkout_reason") @db.VarChar(30)
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  hero Hero @relation(fields: [heroId], references: [id])
+  hub  Hub  @relation(fields: [hubId], references: [id])
+  latestLocations HeroLatestLocation[]
+
+  @@index([heroId])
+  @@index([hubId])
+  @@index([checkedInAt])
+  @@map("hero_attendance")
+}
+
+// Pure observability log — does not drive Hero.dutyStatus itself (that's set
+// directly by the socket disconnect/join handlers in server.ts). Lets the
+// dashboard show a hero's actual online/offline history while on duty,
+// instead of just their current instantaneous status.
+model HeroConnectivityLog {
+  id         Int                    @id @default(autoincrement())
+  heroId     Int                    @map("hero_id")
+  status     HeroConnectivityStatus
+  occurredAt DateTime               @default(now()) @map("occurred_at")
+
+  hero Hero @relation(fields: [heroId], references: [id])
+
+  @@index([heroId, occurredAt])
+  @@map("hero_connectivity_logs")
+}
+
+model HeroLatestLocation {
+  id                       Int                @id @default(autoincrement())
+  heroId                   Int                @unique @map("hero_id")
+  attendanceId             Int?               @map("attendance_id")
+  bookingId                Int?               @map("booking_id")
+  participantRole          String?            @map("participant_role") @db.VarChar(30)
+  mode                     HeroLocationMode
+  latitude                 Decimal            @db.Decimal(10, 8)
+  longitude                Decimal            @db.Decimal(11, 8)
+  accuracyMeters           Decimal?           @map("accuracy_meters") @db.Decimal(8, 2)
+  speedMetersPerSecond     Decimal?           @map("speed_meters_per_second") @db.Decimal(8, 2)
+  headingDegrees           Decimal?           @map("heading_degrees") @db.Decimal(6, 2)
+  altitudeMeters           Decimal?           @map("altitude_meters") @db.Decimal(10, 2)
+  isMocked                 Boolean            @default(false) @map("is_mocked")
+  source                   HeroLocationSource
+  origin                   HeroLocationOrigin @default(UNKNOWN)
+  deviceTimestamp          DateTime?           @map("device_timestamp") @db.DateTime(3)
+  serverReceivedAt         DateTime            @map("server_received_at") @db.DateTime(3)
+  locationUpdatedAt        DateTime            @map("location_updated_at") @db.DateTime(3)
+  appVersion               String?             @map("app_version") @db.VarChar(40)
+  deviceIdHash             String?             @map("device_id_hash") @db.VarChar(128)
+  permissionState          String?             @map("permission_state") @db.VarChar(40)
+  providerState            String?             @map("provider_state") @db.VarChar(40)
+  connectivityState        String?             @map("connectivity_state") @db.VarChar(40)
+  staleAfterAt             DateTime            @map("stale_after_at") @db.DateTime(3)
+  createdAt                DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+
+  hero       Hero            @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  attendance HeroAttendance? @relation(fields: [attendanceId], references: [id], onDelete: SetNull)
+  booking    Booking?        @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([mode])
+  @@index([bookingId])
+  @@index([attendanceId])
+  @@index([serverReceivedAt])
+  @@index([locationUpdatedAt])
+  @@index([staleAfterAt])
+  @@map("hero_latest_locations")
+}
+
+model HeroLocationAccessAudit {
+  id              Int      @id @default(autoincrement())
+  dashboardUserId Int      @map("dashboard_user_id")
+  heroId          Int      @map("hero_id")
+  action          String   @db.VarChar(30)
+  result          String   @db.VarChar(30)
+  reasonCode      String?  @map("reason_code") @db.VarChar(60)
+  occurredAt      DateTime @default(now()) @map("occurred_at") @db.DateTime(3)
+
+  dashboardUser DashboardUser @relation(fields: [dashboardUserId], references: [id], onDelete: Cascade)
+  hero          Hero          @relation(fields: [heroId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardUserId, occurredAt])
+  @@index([heroId, occurredAt])
+  @@map("hero_location_access_audits")
+}
+
+enum HeroConnectivityStatus {
+  ONLINE
+  OFFLINE
+}
+
+model HeroSkill {
+  id        Int      @id @default(autoincrement())
+  heroId    Int      @map("hero_id")
+  serviceId Int      @map("service_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  hero    Hero    @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([heroId, serviceId])
+  @@index([heroId])
+  @@index([serviceId])
+  @@map("hero_skills")
+}
+
+model HeroOtp {
+  id        Int      @id @default(autoincrement())
+  phone     String   @db.VarChar(15)
+  otp       String   @db.VarChar(10)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("hero_otps")
+}
+
+model HeroRefreshToken {
+  id        Int      @id @default(autoincrement())
+  heroId    Int      @map("hero_id")
+  tokenHash String   @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  hero Hero @relation(fields: [heroId], references: [id], onDelete: Cascade)
+
+  @@index([heroId])
+  @@map("hero_refresh_tokens")
+}
+
+model JobRole {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  heroes HeroJobRole[]
+
+  @@map("job_roles")
+}
+
+// A hero can hold multiple job roles (e.g. both AC Technician and Car
+// Cleaner) — replaces the old single Hero.jobRole scalar column.
+model HeroJobRole {
+  id        Int      @id @default(autoincrement())
+  heroId    Int      @map("hero_id")
+  jobRoleId Int      @map("job_role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  hero    Hero    @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  jobRole JobRole @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([heroId, jobRoleId])
+  @@index([jobRoleId])
+  @@map("hero_job_roles")
+}
+
+// ─── Service Catalog ──────────────────────────────────────────────────────────
+
+model ServiceGroup {
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  slug           String   @unique @db.VarChar(100)
+  parentId       Int?     @map("parent_id")
+  iconUrl        String?  @map("icon_url") @db.VarChar(500)
+  bannerImageUrl String?  @map("banner_image_url") @db.VarChar(500)
+  description    String?  @db.Text
+  sortOrder      Int      @default(0) @map("sort_order")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  parent            ServiceGroup?              @relation("GroupHierarchy", fields: [parentId], references: [id])
+  children          ServiceGroup[]             @relation("GroupHierarchy")
+  services          Service[]
+  capacityPlans     ServiceGroupCapacityPlan[]
+  routeReservations BookingRouteReservation[]
+  dailyCapacities   DailyHeroCapacity[]
+
+  @@index([parentId])
+  @@map("service_groups")
+}
+
+model ServiceCategory {
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  slug           String   @unique @db.VarChar(100)
+  description    String?  @db.Text
+  iconUrl        String?  @map("icon_url") @db.VarChar(500)
+  bannerImageUrl String?  @map("banner_image_url") @db.VarChar(500)
+  days           Int?
+  isActive       Boolean  @default(true) @map("is_active")
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  services       Service[]
+  bookings       Booking[]
+  trainingVideos TrainingVideo[]
+  shopProducts   ShopProduct[]   @relation("ShopProductServiceCategory")
+
+  @@map("service_categories")
+}
+
+model Service {
+  id                Int      @id @default(autoincrement())
+  categoryId        Int      @map("category_id")
+  name              String   @db.VarChar(100)
+  slug              String   @db.VarChar(100)
+  description       String?  @db.Text
+  searchTags        String?  @map("search_tags") @db.Text
+  price             Decimal? @db.Decimal(10, 2)
+  mrp               Decimal? @db.Decimal(10, 2)
+  taxMode           String   @default("NONE") @map("tax_mode") @db.VarChar(20)
+  taxValue          Decimal  @default(0.00) @map("tax_value") @db.Decimal(10, 2)
+  imageUrl          String?  @map("image_url") @db.VarChar(500)
+  detailImageUrl    String?  @map("detail_image_url") @db.VarChar(500)
+  detailContentJson String?  @map("detail_content_json") @db.Text
+  duration          Int?
+  workerCount       Int?     @map("worker_count")
+  serviceGroupId    Int?     @map("service_group_id")
+  isActive          Boolean  @default(true) @map("is_active")
+  isFeatured        Boolean  @default(false) @map("is_featured")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  category           ServiceCategory               @relation(fields: [categoryId], references: [id])
+  serviceGroup       ServiceGroup?                 @relation(fields: [serviceGroupId], references: [id])
+  variants           ServiceVariant[]
+  heroSkills         HeroSkill[]
+  bookingItems       BookingItem[]
+  hubAvailability    HubServiceAvailability[]
+  packages           CustomerServicePackage[]
+  capacityGroupLinks BookingCapacityGroupService[]
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@map("services")
+}
+
+model HubServiceAvailability {
+  id        Int      @id @default(autoincrement())
+  hubId     Int      @map("hub_id")
+  serviceId Int      @map("service_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  hub     Hub     @relation(fields: [hubId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([hubId, serviceId])
+  @@index([hubId])
+  @@index([serviceId])
+  @@map("hub_service_availability")
+}
+
+model ServiceVariant {
+  id              Int      @id @default(autoincrement())
+  serviceId       Int      @map("service_id")
+  name            String   @db.VarChar(100)
+  description     String?  @db.Text
+  imageUrl        String?  @map("image_url") @db.VarChar(500)
+  durationMinutes Int      @default(60) @map("duration_minutes")
+  mrp             Decimal? @db.Decimal(10, 2)
+  singlePrice     Decimal? @map("single_price") @db.Decimal(10, 2)
+  price1Month     Decimal? @map("price_1_month") @db.Decimal(10, 2)
+  price3Month     Decimal? @map("price_3_month") @db.Decimal(10, 2)
+  price6Month     Decimal? @map("price_6_month") @db.Decimal(10, 2)
+  price12Month    Decimal? @map("price_12_month") @db.Decimal(10, 2)
+  visitsPerMonth  Int      @default(1) @map("visits_per_month")
+  validityDays    Int?     @map("validity_days")
+  totalVisits     Int?     @map("total_visits")
+  pricePerVisit   Decimal? @map("price_per_visit") @db.Decimal(10, 2)
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  service      Service                  @relation(fields: [serviceId], references: [id])
+  bookingItems BookingItem[]
+  packages     CustomerServicePackage[]
+
+  @@index([serviceId])
+  @@map("service_variants")
+}
+
+// ─── Customers ────────────────────────────────────────────────────────────────
+
+model Customer {
+  id              Int       @id @default(autoincrement())
+  phone           String    @unique @db.VarChar(15)
+  alternatePhone  String?   @map("alternate_phone") @db.VarChar(15)
+  name            String?   @db.VarChar(100)
+  email           String?   @unique @db.VarChar(100)
+  gender          Gender?
+  dateOfBirth     DateTime? @map("date_of_birth") @db.Date
+  profilePhotoUrl String?   @map("profile_photo_url") @db.VarChar(500)
+
+  // Communication preferences
+  whatsappOptIn Boolean @default(true) @map("whatsapp_opt_in")
+  deviceToken   String? @map("device_token") @db.VarChar(500)
+
+  // Referral
+  referralCode        String?   @unique @map("referral_code") @db.VarChar(20)
+  referredByPhone     String?   @map("referred_by_phone") @db.VarChar(15)
+  referralBonusPaidAt DateTime? @map("referral_bonus_paid_at")
+
+  // Internal / Admin
+  notes String? @db.Text
+
+  isActive  Boolean   @default(true) @map("is_active")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  addresses          CustomerAddress[]
+  bookings           Booking[]
+  invoices           Invoice[]
+  payments           Payment[]
+  paymentOrders      PaymentOrder[]
+  refreshTokens      CustomerRefreshToken[]
+  supportThreads     SupportChatThread[]
+  bookingReviews     BookingReview[]
+  packages           CustomerServicePackage[]
+  walletTransactions CustomerWalletTransaction[]
+  coinTransactions   CustomerCoinTransaction[]
+  legacyAddresses    LegacyCustomerAddress[]
+  legacyWalletTransactions LegacyWalletTransaction[]
+
+  @@index([phone])
+  @@index([name])
+  @@index([email])
+  @@index([deletedAt])
+  @@map("customers")
+}
+
+model CustomerOtp {
+  id        Int      @id @default(autoincrement())
+  phone     String   @db.VarChar(15)
+  otp       String   @db.VarChar(10)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("customer_otps")
+}
+
+model OtpChallenge {
+  id                   BigInt    @id @default(autoincrement())
+  identifier           String    @db.VarChar(32)
+  context              String    @db.VarChar(20)
+  otpHash              String    @map("otp_hash") @db.VarChar(255)
+  expiresAt            DateTime  @map("expires_at")
+  verificationAttempts Int       @default(0) @map("verification_attempts")
+  consumedAt           DateTime? @map("consumed_at")
+  invalidatedAt        DateTime? @map("invalidated_at")
+  requestIpHash        String?   @map("request_ip_hash") @db.Char(64)
+  deviceHash           String?   @map("device_hash") @db.Char(64)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@index([identifier, context, createdAt])
+  @@index([identifier, context, consumedAt, invalidatedAt, expiresAt])
+  @@index([expiresAt])
+  @@index([consumedAt, expiresAt])
+  @@map("otp_challenges")
+}
+
+model OtpSecurityState {
+  id              BigInt    @id @default(autoincrement())
+  scopeType       String    @map("scope_type") @db.VarChar(12)
+  scopeKey        String    @map("scope_key") @db.VarChar(64)
+  context         String    @db.VarChar(20)
+  requestCount    Int       @default(0) @map("request_count")
+  windowStartedAt DateTime  @map("window_started_at")
+  cooldownUntil   DateTime? @map("cooldown_until")
+  failedAttempts  Int       @default(0) @map("failed_attempts")
+  lockoutUntil    DateTime? @map("lockout_until")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([scopeType, scopeKey, context])
+  @@index([context, cooldownUntil])
+  @@index([context, lockoutUntil])
+  @@index([windowStartedAt])
+  @@map("otp_security_states")
+}
+
+model CustomerRefreshToken {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @map("customer_id")
+  tokenHash  String   @map("token_hash") @db.VarChar(255)
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([expiresAt])
+  @@map("customer_refresh_tokens")
+}
+
+model TimeSlot {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  slug      String   @unique @db.VarChar(120)
+  fromTime  String   @map("from_time") @db.VarChar(5)
+  toTime    String   @map("to_time") @db.VarChar(5)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  bookings Booking[]
+
+  @@map("time_slots")
+}
+
+model CustomerAddress {
+  id           Int      @id @default(autoincrement())
+  customerId   Int      @map("customer_id")
+  label        String   @default("Home") @db.VarChar(50)
+  addressLine1 String   @map("address_line1") @db.VarChar(255)
+  addressLine2 String?  @map("address_line2") @db.VarChar(255)
+  cityId       Int      @map("city_id")
+  pincode      String   @db.VarChar(10)
+  latitude     Decimal  @db.Decimal(10, 8)
+  longitude    Decimal  @db.Decimal(11, 8)
+  isDefault    Boolean  @default(false) @map("is_default")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  city     City      @relation(fields: [cityId], references: [id])
+  bookings Booking[]
+
+  @@index([customerId])
+  @@map("customer_addresses")
+}
+
+// ─── Phase 1: Booking Core ───────────────────────────────────────────────────
+
+model Booking {
+  id                  Int           @id @default(autoincrement())
+  bookingNo           String        @unique @map("booking_no") @db.VarChar(30)
+  customerId          Int?          @map("customer_id")
+  customerAddressId   Int?          @map("customer_address_id")
+  cityId              Int           @map("city_id")
+  bookedById          Int?          @map("booked_by_id")
+  assignedHeroId      Int?          @map("assigned_hero_id")
+  partnerHeroId       Int?          @map("partner_hero_id")
+  serviceCategoryId   Int?          @map("service_category_id")
+  timeSlotId          Int?          @map("time_slot_id")
+  bookingType         BookingType   @default(SINGLE) @map("booking_type")
+  status              BookingStatus @default(PENDING_ASSIGNMENT)
+  idempotencyKey      String?       @map("idempotency_key") @db.VarChar(100)
+  idempotencyScope    String?       @map("idempotency_scope") @db.VarChar(100)
+  requestFingerprint  String?       @map("request_fingerprint") @db.Char(64)
+  creationSource      String        @default("LEGACY") @map("creation_source") @db.VarChar(30)
+  // Additive — only ever set for status=LEGACY_ARCHIVED rows. Preserves the
+  // real legacy status string (RUNNING/HOLD/etc.) since LEGACY_ARCHIVED alone
+  // doesn't distinguish which of the 5 non-terminal legacy states a given
+  // row was actually in.
+  legacyOriginalStatus String?      @map("legacy_original_status") @db.VarChar(30)
+  // Additive, historical-only (Task L). The legacy `orders.delivery_agent`
+  // "default hero for this order" field — distinct from `tasks.driver_id`,
+  // which LegacyBookingVisit already covers. Populated only for imported
+  // bookings that have this legacy data and currently show no
+  // LegacyBookingVisit match. NEVER read by dispatch/assignment logic — see
+  // Booking.assignedHeroId/partnerHeroId for the only live assignment
+  // fields. legacyAssignedHeroName is the raw legacy name string, kept even
+  // when legacyAssignedHeroId can't be resolved to an imported Hero.
+  legacyAssignedHeroName String?     @map("legacy_assigned_hero_name") @db.VarChar(150)
+  legacyAssignedHeroId   Int?        @map("legacy_assigned_hero_id")
+  // Additive (Task N.2, Prompt 9). The legacy `orders.pickup_time` slot
+  // label ("01-03 PM" etc.) — kept as a raw historical string rather than
+  // force-linked to the live TimeSlot table, since the legacy system's 6
+  // slots don't map cleanly onto V2's 4 broader windows (ambiguous overlap
+  // at the boundaries). Booking.scheduledDate itself IS backfilled directly
+  // from the legacy pickup_date/delivery_date, since a plain date has no
+  // such ambiguity.
+  legacyTimeSlotLabel String?        @map("legacy_time_slot_label") @db.VarChar(30)
+  version             Int           @default(1)
+  requiredWorkerCount Int           @default(1) @map("required_worker_count")
+  workerPlanVersion   Int           @default(1) @map("worker_plan_version")
+
+  // Customer info (denormalized — works for walk-in bookings too)
+  customerName     String   @map("customer_name") @db.VarChar(100)
+  customerPhone    String   @map("customer_phone") @db.VarChar(15)
+  customerAltPhone String?  @map("customer_alt_phone") @db.VarChar(15)
+  customerEmail    String?  @map("customer_email") @db.VarChar(100)
+  serviceAddress   String   @map("service_address") @db.Text
+  latitude         Decimal? @db.Decimal(10, 8)
+  longitude        Decimal? @db.Decimal(11, 8)
+
+  scheduledDate          DateTime? @map("scheduled_date") @db.Date
+  scheduledFromTime      String?   @map("scheduled_from_time") @db.VarChar(5)
+  scheduledToTime        String?   @map("scheduled_to_time") @db.VarChar(5)
+  slotStartAt            DateTime? @map("slot_start_at") @db.DateTime(3)
+  slotEndAt              DateTime? @map("slot_end_at") @db.DateTime(3)
+  serviceDurationMinutes Int?      @map("service_duration_minutes")
+
+  // Pricing
+  subtotal      Decimal @default(0.00) @db.Decimal(10, 2)
+  discountTotal Decimal @default(0.00) @map("discount_total") @db.Decimal(10, 2)
+  taxTotal      Decimal @default(0.00) @map("tax_total") @db.Decimal(10, 2)
+  payableTotal  Decimal @default(0.00) @map("payable_total") @db.Decimal(10, 2)
+  advancePaid   Decimal @default(0.00) @map("advance_paid") @db.Decimal(10, 2)
+  finalPaid     Decimal @default(0.00) @map("final_paid") @db.Decimal(10, 2)
+
+  // Jiffit Coins redeemed against this booking (if any) — payableTotal above
+  // already reflects the discount; these two fields just record what was used.
+  coinsRedeemed Int     @default(0) @map("coins_redeemed")
+  coinsDiscount Decimal @default(0.00) @map("coins_discount") @db.Decimal(10, 2)
+
+  // Charged when the requested slot runs past the hub's shift end (customer
+  // booked close enough to shift end that the job spills into overtime).
+  // Quoted from IncentivePlan(OVERTIME).overtimeRatePerHour at booking time;
+  // payableTotal above already includes this. overtimeMinutes is the quoted
+  // spillover (per hero) used to derive the amount, kept for audit/invoicing.
+  overtimeFeeAmount Decimal @default(0.00) @map("overtime_fee_amount") @db.Decimal(10, 2)
+  overtimeMinutes   Int     @default(0) @map("overtime_minutes")
+
+  couponCode    String?       @map("coupon_code") @db.VarChar(50)
+  paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+  paymentMethod String?       @map("payment_method") @db.VarChar(50)
+
+  // Cash collection tracking — when a hero collects CASH it is owed to the
+  // company until handed over. Online (UPI) payments need no settlement.
+  cashSettled     Boolean   @default(false) @map("cash_settled")
+  cashSettledAt   DateTime? @map("cash_settled_at")
+  cashSettledById Int?      @map("cash_settled_by_id")
+
+  customerNotes      String?   @map("customer_notes") @db.Text
+  adminNotes         String?   @map("admin_notes") @db.Text
+  ipAddress          String?   @map("ip_address") @db.VarChar(45)
+  beforePhotoUrl     String?   @map("before_photo_url") @db.VarChar(500)
+  afterPhotoUrl      String?   @map("after_photo_url") @db.VarChar(500)
+  startOtp           String?   @map("start_otp") @db.VarChar(10)
+  startOtpVerifiedAt DateTime? @map("start_otp_verified_at")
+  paymentRequestedAt DateTime? @map("payment_requested_at")
+
+  // Auto-dispatch retry counter — incremented each time autoDispatch() finds
+  // no eligible hero. The retry cron stops trying once this hits the cap
+  // (and sets it to 99 to mark "escalated to Operations").
+  autoDispatchAttempts Int @default(0) @map("auto_dispatch_attempts")
+
+  // Package purchases are payment/order records, not operational bookings.
+  // Package visit bookings point back to the entitlement they consume.
+  isPackagePurchase        Boolean @default(false) @map("is_package_purchase")
+  customerServicePackageId Int?    @map("customer_service_package_id")
+
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  customer               Customer?                 @relation(fields: [customerId], references: [id])
+  customerAddress        CustomerAddress?          @relation(fields: [customerAddressId], references: [id])
+  city                   City                      @relation(fields: [cityId], references: [id])
+  bookedBy               DashboardUser?            @relation("BookingCreator", fields: [bookedById], references: [id])
+  assignedHero           Hero?                     @relation("AssignedHero", fields: [assignedHeroId], references: [id])
+  partnerHero            Hero?                     @relation("BookingPartner", fields: [partnerHeroId], references: [id])
+  // Historical only — never read by live dispatch/assignment logic. See
+  // Booking.legacyAssignedHeroId's own comment above.
+  legacyAssignedHero     Hero?                     @relation("LegacyAssignedHero", fields: [legacyAssignedHeroId], references: [id])
+  serviceCategory        ServiceCategory?          @relation(fields: [serviceCategoryId], references: [id])
+  timeSlot               TimeSlot?                 @relation(fields: [timeSlotId], references: [id])
+  items                  BookingItem[]
+  statusHistory          BookingStatusHistory[]
+  assignments            BookingAssignment[]
+  teamMembers            BookingTeamMember[]
+  teamRequests           BookingTeamRequest[]
+  invoices               Invoice[]
+  payments               Payment[]
+  paymentOrders           PaymentOrder[]
+  review                 BookingReview?
+  purchasedPackages      CustomerServicePackage[]  @relation("PackagePurchaseBooking")
+  customerServicePackage CustomerServicePackage?   @relation("PackageVisitBookings", fields: [customerServicePackageId], references: [id])
+  routeReservations      BookingRouteReservation[]
+  dispatch               BookingDispatch?
+  dispatchOfferAttempts  BookingOfferAttempt[]
+  latestHeroLocations    HeroLatestLocation[]
+  legacyVisits           LegacyBookingVisit[]
+  legacyInvoiceSnapshots LegacyInvoiceSnapshot[]
+
+  @@unique([idempotencyScope, idempotencyKey])
+  @@index([cityId])
+  @@index([status])
+  @@index([customerId])
+  @@index([assignedHeroId])
+  @@index([partnerHeroId])
+  @@index([scheduledDate])
+  @@index([slotStartAt])
+  @@index([slotEndAt])
+  @@index([createdAt])
+  @@index([isPackagePurchase])
+  @@index([customerServicePackageId])
+  @@index([deletedAt])
+  @@map("bookings")
+}
+
+// ─── Legacy Booking Visits (historical, read-only, additive) ──────────────────
+// One row per legacy `tasks` visit record, linked to its already-imported
+// parent `Booking`. Purely historical: never read by live dispatch, capacity
+// planning, or reporting logic. `legacyDriverId` is always preserved raw;
+// `matchedHeroId` is only ever set where a legacy driver_id cleanly resolves
+// to an already-imported Hero — never a blind FK copy. Does not touch
+// Booking.assignedHeroId/partnerHeroId, BookingAssignment, or any Hero
+// duty/location/rating field.
+enum LegacyTaskStatus {
+  COMPLETED
+  CANCELLED
+  FAILED
+  CONFIRMED
+  IN_PROGRESS
+  UNKNOWN // raw legacy string didn't match any known value — never guessed
+}
+
+model LegacyBookingVisit {
+  id                Int              @id @default(autoincrement())
+  bookingId         Int              @map("booking_id")
+  sourceTaskId      Int              @unique @map("source_task_id")
+  visitDate         DateTime         @map("visit_date") @db.Date
+  status            LegacyTaskStatus
+  rawStatus         String           @map("raw_status") @db.VarChar(30)
+  transType         String?          @map("trans_type") @db.VarChar(10)
+  suType            String?          @map("su_type") @db.VarChar(10)
+  legacyDriverId    Int?             @map("legacy_driver_id")
+  matchedHeroId     Int?             @map("matched_hero_id")
+  taskDescription   String?          @map("task_description") @db.VarChar(255)
+  isHistorical      Boolean          @default(true) @map("is_historical")
+  importedAt        DateTime         @default(now()) @map("imported_at")
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  matchedHero Hero?   @relation(fields: [matchedHeroId], references: [id])
+
+  @@index([bookingId])
+  @@index([sourceTaskId])
+  @@map("legacy_booking_visits")
+}
+
+// ─── Legacy Customer Addresses (historical, read-only, additive) ──────────────
+// One row per legacy `address` row, verbatim, no validation/trimming. Never
+// written into the live CustomerAddress model — CustomerAddress.pincode is
+// required non-null and 99.7% of legacy rows don't have a usable one, so this
+// is deliberately a separate shadow table, not a filtered/cleaned import.
+// customerId is null for rows whose legacy user_id doesn't resolve to an
+// imported Customer (e.g. a Hero-role account) — imported anyway, for
+// completeness/audit, never skipped.
+model LegacyCustomerAddress {
+  id              Int       @id @default(autoincrement())
+  customerId      Int?      @map("customer_id")
+  rawAddressText  String    @map("raw_address_text") @db.Text
+  rawAddType      String?   @map("raw_add_type") @db.VarChar(200)
+  rawCity         String?   @map("raw_city") @db.VarChar(255)
+  rawPincode      String?   @map("raw_pincode") @db.VarChar(200)
+  rawLat          String?   @map("raw_lat") @db.VarChar(50)
+  rawLng          String?   @map("raw_lng") @db.VarChar(50)
+  sourceAddressId Int       @unique @map("source_address_id")
+  sourceCreatedAt DateTime? @map("source_created_at")
+  importedAt      DateTime  @default(now()) @map("imported_at")
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@map("legacy_customer_addresses")
+}
+
+// ─── Legacy Wallet Transactions (historical, read-only, additive) ─────────────
+// Option C (user-confirmed): historical-only. Never spendable — never sums
+// into, or otherwise feeds, CustomerWalletTransaction/HeroWalletTransaction
+// or any live balance field anywhere in the app. See
+// migration-docs/prompt6-plan.md Task F and prompt7-changes.md for the full
+// read-only dry-run findings this shape is based on.
+enum LegacyWalletTrnType {
+  RECEIPT // legacy trn_type=1
+  CHARGE // legacy trn_type=2 — subscription "burn" debit
+  CREDIT_NOTE // legacy trn_type=3
+  DEBIT_NOTE // legacy trn_type=4
+}
+
+model LegacyWalletTransaction {
+  id       Int  @id @default(autoincrement())
+  customerId Int? @map("customer_id")
+  // Populated only for CHARGE (trn_type=2) rows, where driver_id is real
+  // attribution metadata (confirmed: 100% of driver_id-populated rows are
+  // trn_type=2) — resolved via the same phone-based Hero crosswalk every
+  // other wave uses, never a blind FK copy.
+  attributedHeroId Int? @map("attributed_hero_id")
+  sourceTrnId Int @unique @map("source_trn_id")
+  trnType  LegacyWalletTrnType @map("trn_type")
+  action   String  @db.VarChar(2)
+  amount   Decimal @db.Decimal(10, 2)
+  occurredAt DateTime @map("occurred_at")
+  legacyOrderId Int? @map("legacy_order_id")
+  legacyTaskId  Int? @map("legacy_task_id")
+  wasSoftDeleted Boolean @default(false) @map("was_soft_deleted")
+  description String? @db.Text
+  importedAt DateTime @default(now()) @map("imported_at")
+
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  attributedHero Hero?     @relation(fields: [attributedHeroId], references: [id])
+
+  @@index([customerId])
+  @@map("legacy_wallet_transactions")
+}
+
+// ─── Legacy Content Items (historical, read-only, additive) ───────────────────
+// Read-only shadow of small legacy content tables. `offers` is deliberately
+// excluded — per confirmed decision it's pricing/coupon logic closer to
+// Coupon than pure content, a separate later task. Never auto-publishes:
+// the real live customer-facing content mechanism is the `customerContent`
+// AppSetting JSON namespace, edited only through the existing Settings
+// screen — this table is a pure historical reference.
+enum LegacyContentType {
+  BANNER
+  BLOG_POST
+  PAGE
+  FAQ
+  TESTIMONIAL
+  CONTACT_MESSAGE
+}
+
+model LegacyContentItem {
+  id          Int               @id @default(autoincrement())
+  contentType LegacyContentType @map("content_type")
+  title       String?           @db.VarChar(255)
+  body        String?           @db.Text
+  // Catch-all for source-specific columns: a banner's photo/link/b_type, a
+  // blog's author/category/wp_id, a testimonial's rating/designation, a
+  // contact message's sender mobile/email/subject.
+  rawFields   Json              @map("raw_fields")
+  sourceTable String            @map("source_table") @db.VarChar(30)
+  sourceId    Int               @map("source_id")
+  importedAt  DateTime          @default(now()) @map("imported_at")
+
+  @@unique([sourceTable, sourceId])
+  @@index([contentType])
+  @@map("legacy_content_items")
+}
+
+// ─── Legacy Invoice Snapshot (historical, read-only, additive) ────────────────
+// Prompt 9, Task N.4. A real `invoices` table exists in the legacy dump
+// (distinct from — and more complete than — the raw `orders` financial
+// columns), covering 9,070 of 15,961 imported bookings. Deliberately NOT
+// written into the live `Invoice`/`Payment` tables — a legacy financial
+// record indistinguishable from a live one would be a real correctness
+// problem for anything that reads those tables expecting current,
+// actionable invoices. One booking can have more than one legacy invoice
+// (344 legacy orders had multiple, e.g. subscription billing cycles), so
+// this is a one-to-many relation, not a 1:1 snapshot.
+model LegacyInvoiceSnapshot {
+  id                  Int       @id @default(autoincrement())
+  bookingId           Int       @map("booking_id")
+  sourceInvoiceId     Int       @unique @map("source_invoice_id")
+  legacyInvoiceNumber String?   @map("legacy_invoice_number") @db.VarChar(50)
+  subTotal            Decimal   @map("sub_total") @db.Decimal(11, 2)
+  discountTotal        Decimal  @map("discount_total") @db.Decimal(10, 2)
+  discountedTotal      Decimal  @map("discounted_total") @db.Decimal(10, 2)
+  gstAmount            Decimal  @map("gst_amount") @db.Decimal(11, 2)
+  payableTotal         Decimal  @map("payable_total") @db.Decimal(10, 2)
+  totalPaid            Decimal  @map("total_paid") @db.Decimal(10, 2)
+  paymentMode          String?  @map("payment_mode") @db.VarChar(30)
+  payRef               String?  @map("pay_ref") @db.VarChar(255)
+  invoiceDate          DateTime? @map("invoice_date") @db.Date
+  billingName          String?  @map("billing_name") @db.VarChar(255)
+  billingAddress       String?  @map("billing_address") @db.Text
+  // Real per-line-item breakdown from the legacy invoice — deliberately not
+  // used to retroactively split the already-imported, single flattened
+  // BookingItem row (that row is already live-referenced by invoice PDF
+  // generation etc.; splitting it after the fact carries real risk for no
+  // proportionate benefit). Surfaced read-only in the dashboard instead.
+  rawItems             Json?    @map("raw_items")
+  rawActivityLog       Json?    @map("raw_activity_log")
+  importedAt           DateTime @default(now()) @map("imported_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("legacy_invoice_snapshots")
+}
+
+model BookingDispatch {
+  id                           Int           @id @default(autoincrement())
+  bookingId                    Int           @unique @map("booking_id")
+  scheduledStartAt             DateTime      @map("scheduled_start_at") @db.DateTime(3)
+  dispatchState                DispatchState @default(PLANNED) @map("dispatch_state")
+  dispatchReleaseAt            DateTime      @map("dispatch_release_at") @db.DateTime(3)
+  nextAttemptAt                DateTime?     @map("next_attempt_at") @db.DateTime(3)
+  currentOfferAttemptId        Int?          @unique @map("current_offer_attempt_id")
+  currentCandidateHeroId       Int?          @map("current_candidate_hero_id")
+  attemptCount                 Int           @default(0) @map("attempt_count")
+  maxAttempts                  Int           @default(5) @map("max_attempts")
+  escalatedAt                  DateTime?     @map("escalated_at") @db.DateTime(3)
+  failureCode                  String?       @map("failure_code") @db.VarChar(80)
+  version                      Int           @default(1)
+  leaseOwner                   String?       @map("lease_owner") @db.VarChar(100)
+  leaseExpiresAt               DateTime?     @map("lease_expires_at") @db.DateTime(3)
+  reminderAt                   DateTime      @map("reminder_at") @db.DateTime(3)
+  reminderSentAt               DateTime?     @map("reminder_sent_at") @db.DateTime(3)
+  preflightedAt                DateTime?     @map("preflighted_at") @db.DateTime(3)
+  candidateCount               Int           @default(0) @map("candidate_count")
+  bestEtaSeconds               Int?          @map("best_eta_seconds")
+  bestDistanceMeters           Int?          @map("best_distance_meters")
+  bestOriginSource             String?       @map("best_origin_source") @db.VarChar(40)
+  bestLocationFreshnessSeconds Int?          @map("best_location_freshness_seconds")
+  lateRisk                     Boolean       @default(false) @map("late_risk")
+  shadowMode                   Boolean       @default(true) @map("shadow_mode")
+  manualOverride               Boolean       @default(false) @map("manual_override")
+  overrideReason               String?       @map("override_reason") @db.VarChar(500)
+  createdAt                    DateTime      @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                    DateTime      @updatedAt @map("updated_at") @db.DateTime(3)
+
+  booking      Booking                      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  attempts     BookingOfferAttempt[]
+  participants BookingDispatchParticipant[]
+
+  @@index([dispatchState, dispatchReleaseAt], map: "booking_dispatch_state_release_idx")
+  @@index([dispatchState, nextAttemptAt], map: "booking_dispatch_state_next_idx")
+  @@index([leaseExpiresAt], map: "booking_dispatch_lease_idx")
+  @@index([reminderAt, reminderSentAt], map: "booking_dispatch_reminder_idx")
+  @@map("booking_dispatches")
+}
+
+model BookingDispatchParticipant {
+  id                    Int                      @id @default(autoincrement())
+  dispatchId            Int                      @map("dispatch_id")
+  slotNumber            Int                      @map("slot_number")
+  role                  DispatchParticipantRole
+  requiredServiceId     Int?                     @map("required_service_id")
+  participantState      DispatchParticipantState @default(PLANNED) @map("participant_state")
+  acceptedHeroId        Int?                     @map("accepted_hero_id")
+  currentOfferAttemptId Int?                     @unique @map("current_offer_attempt_id")
+  routeEtaSeconds       Int?                     @map("route_eta_seconds")
+  distanceMeters        Int?                     @map("distance_meters")
+  readyAt               DateTime?                @map("ready_at") @db.DateTime(3)
+  reminderSentAt        DateTime?                @map("reminder_sent_at") @db.DateTime(3)
+  createdAt             DateTime                 @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime                 @updatedAt @map("updated_at") @db.DateTime(3)
+
+  dispatch     BookingDispatch       @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  acceptedHero Hero?                 @relation(fields: [acceptedHeroId], references: [id])
+  attempts     BookingOfferAttempt[]
+
+  @@unique([dispatchId, slotNumber], map: "dispatch_participants_slot_key")
+  @@index([acceptedHeroId, participantState], map: "dispatch_participants_hero_state_idx")
+  @@index([dispatchId, participantState], map: "dispatch_participants_state_idx")
+  @@map("booking_dispatch_participants")
+}
+
+model BookingOfferAttempt {
+  id                Int                     @id @default(autoincrement())
+  bookingId         Int                     @map("booking_id")
+  dispatchId        Int                     @map("dispatch_id")
+  participantSlotId Int                     @map("participant_slot_id")
+  heroId            Int                     @map("hero_id")
+  role              DispatchParticipantRole
+  attemptNumber     Int                     @map("attempt_number")
+  status            OfferAttemptState       @default(PENDING)
+  activeKey         String?                 @unique @map("active_key") @db.VarChar(100)
+  offerReleaseAt    DateTime                @map("offer_release_at") @db.DateTime(3)
+  offerExpiresAt    DateTime                @map("offer_expires_at") @db.DateTime(3)
+  deliveredAt       DateTime?               @map("delivered_at") @db.DateTime(3)
+  acceptedAt        DateTime?               @map("accepted_at") @db.DateTime(3)
+  rejectedAt        DateTime?               @map("rejected_at") @db.DateTime(3)
+  expiredAt         DateTime?               @map("expired_at") @db.DateTime(3)
+  cancelledAt       DateTime?               @map("cancelled_at") @db.DateTime(3)
+  failureCode       String?                 @map("failure_code") @db.VarChar(80)
+  eventId           String                  @unique @map("event_id") @db.VarChar(100)
+  etaSeconds        Int?                    @map("eta_seconds")
+  distanceMeters    Int?                    @map("distance_meters")
+  originSource      String?                 @map("origin_source") @db.VarChar(40)
+  createdAt         DateTime                @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime                @updatedAt @map("updated_at") @db.DateTime(3)
+
+  booking         Booking                    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  dispatch        BookingDispatch            @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  participantSlot BookingDispatchParticipant @relation(fields: [participantSlotId], references: [id], onDelete: Cascade)
+  hero            Hero                       @relation(fields: [heroId], references: [id])
+
+  @@unique([participantSlotId, attemptNumber], map: "offer_attempt_slot_number_key")
+  @@index([bookingId, status], map: "offer_attempt_booking_state_idx")
+  @@index([dispatchId, status], map: "offer_attempt_dispatch_state_idx")
+  @@index([offerExpiresAt, status], map: "offer_attempt_expiry_state_idx")
+  @@index([heroId, status], map: "offer_attempt_hero_state_idx")
+  @@map("booking_offer_attempts")
+}
+
+model DispatchOutboxEvent {
+  id             Int                 @id @default(autoincrement())
+  eventId        String              @unique @map("event_id") @db.VarChar(100)
+  aggregateType  String              @map("aggregate_type") @db.VarChar(40)
+  aggregateId    String              @map("aggregate_id") @db.VarChar(100)
+  eventType      String              @map("event_type") @db.VarChar(80)
+  payloadVersion Int                 @default(1) @map("payload_version")
+  payload        Json
+  state          DispatchOutboxState @default(PENDING)
+  availableAt    DateTime            @default(now()) @map("available_at") @db.DateTime(3)
+  processedAt    DateTime?           @map("processed_at") @db.DateTime(3)
+  attempts       Int                 @default(0)
+  lastError      String?             @map("last_error") @db.Text
+  leaseOwner     String?             @map("lease_owner") @db.VarChar(100)
+  leaseExpiresAt DateTime?           @map("lease_expires_at") @db.DateTime(3)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([state, availableAt], map: "dispatch_outbox_due_idx")
+  @@index([aggregateType, aggregateId], map: "dispatch_outbox_aggregate_idx")
+  @@map("dispatch_outbox_events")
+}
+
+model BookingItem {
+  id               Int      @id @default(autoincrement())
+  bookingId        Int      @map("booking_id")
+  serviceId        Int?     @map("service_id")
+  serviceVariantId Int?     @map("service_variant_id")
+  name             String   @db.VarChar(150)
+  description      String?  @db.Text
+  quantity         Int      @default(1)
+  unitPrice        Decimal  @map("unit_price") @db.Decimal(10, 2)
+  taxAmount        Decimal  @default(0.00) @map("tax_amount") @db.Decimal(10, 2)
+  totalAmount      Decimal  @map("total_amount") @db.Decimal(10, 2)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  booking        Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service        Service?        @relation(fields: [serviceId], references: [id])
+  serviceVariant ServiceVariant? @relation(fields: [serviceVariantId], references: [id])
+
+  @@index([bookingId])
+  @@map("booking_items")
+}
+
+model CustomerServicePackage {
+  id                Int      @id @default(autoincrement())
+  customerId        Int      @map("customer_id")
+  bookingId         Int      @map("booking_id")
+  serviceId         Int      @map("service_id")
+  serviceVariantId  Int?     @map("service_variant_id")
+  packageName       String   @map("package_name") @db.VarChar(150)
+  totalVisits       Int      @map("total_visits")
+  usedVisits        Int      @default(0) @map("used_visits")
+  validityDays      Int      @map("validity_days")
+  startDate         DateTime @map("start_date") @db.Date
+  endDate           DateTime @map("end_date") @db.Date
+  preferredFromTime String?  @map("preferred_from_time") @db.VarChar(5)
+  preferredToTime   String?  @map("preferred_to_time") @db.VarChar(5)
+  status            String   @default("ACTIVE") @db.VarChar(20)
+  // Lightweight cancellation audit only — who/when. Deliberately no refund
+  // amount, refund status, or proration fields: cancelling a package never
+  // triggers any refund calculation. A customer wanting a refund is
+  // directed to Support Chat to discuss it with a human — see
+  // migration-docs/prompt19-task-z3-cancel-support-chat.md.
+  cancelledAt       DateTime? @map("cancelled_at")
+  cancelledByType   String?   @map("cancelled_by_type") @db.VarChar(20)
+  cancelledById     Int?      @map("cancelled_by_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  purchaseBooking Booking         @relation("PackagePurchaseBooking", fields: [bookingId], references: [id], onDelete: Cascade)
+  visitBookings   Booking[]       @relation("PackageVisitBookings")
+  service         Service         @relation(fields: [serviceId], references: [id])
+  serviceVariant  ServiceVariant? @relation(fields: [serviceVariantId], references: [id])
+
+  @@index([customerId, status])
+  @@index([bookingId])
+  @@index([serviceId])
+  @@index([serviceVariantId])
+  @@index([endDate])
+  @@map("customer_service_packages")
+}
+
+model BookingStatusHistory {
+  id              Int            @id @default(autoincrement())
+  bookingId       Int            @map("booking_id")
+  fromStatus      BookingStatus? @map("from_status")
+  toStatus        BookingStatus  @map("to_status")
+  message         String?        @db.Text
+  changedByUserId Int?           @map("changed_by_user_id")
+  changedByHeroId Int?           @map("changed_by_hero_id")
+  actorType       String         @default("SYSTEM") @map("actor_type") @db.VarChar(20)
+  actorId         Int?           @map("actor_id")
+  source          String         @default("LEGACY") @db.VarChar(30)
+  reasonCode      String?        @map("reason_code") @db.VarChar(50)
+  reasonText      String?        @map("reason_text") @db.Text
+  metadataJson    Json?          @map("metadata_json")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  booking       Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  changedByUser DashboardUser? @relation(fields: [changedByUserId], references: [id])
+  changedByHero Hero?          @relation(fields: [changedByHeroId], references: [id])
+
+  @@index([bookingId])
+  @@index([createdAt])
+  @@index([bookingId, createdAt])
+  @@map("booking_status_history")
+}
+
+model BookingAssignment {
+  id              Int              @id @default(autoincrement())
+  bookingId       Int              @map("booking_id")
+  heroId          Int              @map("hero_id")
+  assignedById    Int?             @map("assigned_by_id")
+  status          AssignmentStatus @default(ASSIGNED)
+  assignedAt      DateTime         @default(now()) @map("assigned_at")
+  acceptedAt      DateTime?        @map("accepted_at")
+  acceptedFromLat Decimal?         @map("accepted_from_lat") @db.Decimal(10, 8)
+  acceptedFromLng Decimal?         @map("accepted_from_lng") @db.Decimal(11, 8)
+  arrivedAt       DateTime?        @map("arrived_at")
+  startedAt       DateTime?        @map("started_at")
+  completedAt     DateTime?        @map("completed_at")
+  cancelledAt     DateTime?        @map("cancelled_at")
+  cancelReason    String?          @map("cancel_reason") @db.Text
+  heroNotes       String?          @map("hero_notes") @db.Text
+
+  // Commission snapshot — frozen at completion time so a later change to the
+  // hero's live commissionPercentage never alters historical earnings.
+  commissionRateApplied Decimal? @map("commission_rate_applied") @db.Decimal(5, 2)
+  commissionAmount      Decimal? @map("commission_amount") @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  booking    Booking        @relation(fields: [bookingId], references: [id])
+  hero       Hero           @relation(fields: [heroId], references: [id])
+  assignedBy DashboardUser? @relation("Assigner", fields: [assignedById], references: [id])
+
+  @@unique([bookingId, heroId])
+  @@index([bookingId])
+  @@index([heroId])
+  @@index([status])
+  @@map("booking_assignments")
+}
+
+// ─── Exact slot capacity planning (Phase 2) ──────────────────────────────────
+
+model ServiceGroupCapacityPlan {
+  id                   Int                @id @default(autoincrement())
+  serviceGroupId       Int                @map("service_group_id")
+  hubId                Int                @map("hub_id")
+  planDate             DateTime           @map("plan_date") @db.Date
+  defaultBufferMinutes Int                @default(10) @map("default_buffer_minutes")
+  maxBookingsOverride  Int?               @map("max_bookings_override")
+  status               CapacityPlanStatus @default(DRAFT)
+  version              Int                @default(1)
+  notes                String?            @db.Text
+  createdById          Int?               @map("created_by_id")
+  updatedById          Int?               @map("updated_by_id")
+  publishedById        Int?               @map("published_by_id")
+  publishedAt          DateTime?          @map("published_at")
+  lockedById           Int?               @map("locked_by_id")
+  lockedAt             DateTime?          @map("locked_at")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  serviceGroup ServiceGroup        @relation(fields: [serviceGroupId], references: [id])
+  hub          Hub                 @relation(fields: [hubId], references: [id])
+  createdBy    DashboardUser?      @relation("CapacityPlanCreator", fields: [createdById], references: [id])
+  updatedBy    DashboardUser?      @relation("CapacityPlanUpdater", fields: [updatedById], references: [id])
+  publishedBy  DashboardUser?      @relation("CapacityPlanPublisher", fields: [publishedById], references: [id])
+  lockedBy     DashboardUser?      @relation("CapacityPlanLocker", fields: [lockedById], references: [id])
+  shifts       CapacityPlanShift[]
+
+  @@unique([serviceGroupId, hubId, planDate], map: "sg_capacity_plans_group_hub_date_key")
+  @@index([hubId, planDate, status], map: "sg_capacity_plans_hub_date_status_idx")
+  @@index([serviceGroupId, planDate, status], map: "sg_capacity_plans_group_date_status_idx")
+  @@map("service_group_capacity_plans")
+}
+
+model CapacityPlanShift {
+  id             Int               @id @default(autoincrement())
+  capacityPlanId Int               @map("capacity_plan_id")
+  shiftType      CapacityShiftType @map("shift_type")
+  shiftStartTime String            @map("shift_start_time") @db.VarChar(5)
+  shiftEndTime   String            @map("shift_end_time") @db.VarChar(5)
+  heroCount      Int               @map("hero_count")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  capacityPlan ServiceGroupCapacityPlan @relation(fields: [capacityPlanId], references: [id], onDelete: Cascade)
+  routeLines   ServiceGroupRouteLine[]
+
+  @@unique([capacityPlanId, shiftType])
+  @@index([shiftType, shiftStartTime, shiftEndTime], map: "capacity_shifts_type_times_idx")
+  @@map("capacity_plan_shifts")
+}
+
+model ServiceGroupRouteLine {
+  id                  Int             @id @default(autoincrement())
+  capacityPlanShiftId Int             @map("capacity_plan_shift_id")
+  routeLineNumber     Int             @map("route_line_number")
+  assignedHeroId      Int?            @map("assigned_hero_id")
+  status              RouteLineStatus @default(OPEN)
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  capacityPlanShift CapacityPlanShift         @relation(fields: [capacityPlanShiftId], references: [id], onDelete: Cascade)
+  assignedHero      Hero?                     @relation(fields: [assignedHeroId], references: [id])
+  reservations      BookingRouteReservation[]
+
+  @@unique([capacityPlanShiftId, routeLineNumber], map: "route_lines_shift_number_key")
+  @@unique([capacityPlanShiftId, assignedHeroId], map: "route_lines_shift_hero_key")
+  @@index([capacityPlanShiftId, status], map: "route_lines_shift_status_idx")
+  @@index([assignedHeroId, status], map: "route_lines_hero_status_idx")
+  @@map("service_group_route_lines")
+}
+
+model BookingRouteReservation {
+  id                     Int                    @id @default(autoincrement())
+  bookingId              Int                    @map("booking_id")
+  routeLineId            Int                    @map("route_line_id")
+  serviceGroupId         Int?                   @map("service_group_id")
+  capacityUnit           Int                    @map("capacity_unit")
+  role                   RouteReservationRole
+  status                 RouteReservationStatus @default(ACTIVE)
+  slotStartAt            DateTime               @map("slot_start_at") @db.DateTime(3)
+  slotEndAt              DateTime               @map("slot_end_at") @db.DateTime(3)
+  serviceDurationMinutes Int                    @map("service_duration_minutes")
+  travelEtaMinutes       Int?                   @map("travel_eta_minutes")
+  bufferMinutes          Int                    @map("buffer_minutes")
+  releasedAt             DateTime?              @map("released_at")
+  releaseReason          String?                @map("release_reason") @db.VarChar(255)
+  createdAt              DateTime               @default(now()) @map("created_at")
+  updatedAt              DateTime               @updatedAt @map("updated_at")
+
+  booking      Booking               @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  routeLine    ServiceGroupRouteLine @relation(fields: [routeLineId], references: [id])
+  serviceGroup ServiceGroup?         @relation(fields: [serviceGroupId], references: [id])
+
+  @@unique([bookingId, serviceGroupId, capacityUnit], map: "route_reservations_booking_group_unit_key")
+  @@unique([bookingId, serviceGroupId, routeLineId], map: "route_reservations_booking_group_line_key")
+  @@index([routeLineId, status, slotStartAt, slotEndAt], map: "route_reservations_line_status_times_idx")
+  @@index([bookingId, status], map: "route_reservations_booking_status_idx")
+  @@map("booking_route_reservations")
+}
+
+model BookingTeamMember {
+  id              Int                     @id @default(autoincrement())
+  bookingId       Int                     @map("booking_id")
+  heroId          Int                     @map("hero_id")
+  invitedByHeroId Int                     @map("invited_by_hero_id")
+  requestId       Int?                    @unique @map("request_id")
+  status          BookingTeamMemberStatus @default(ACTIVE)
+  joinedAt        DateTime                @default(now()) @map("joined_at")
+  leftAt          DateTime?               @map("left_at")
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @updatedAt @map("updated_at")
+
+  booking       Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  hero          Hero                @relation(fields: [heroId], references: [id])
+  invitedByHero Hero                @relation("BookingTeamMemberInviter", fields: [invitedByHeroId], references: [id])
+  request       BookingTeamRequest? @relation(fields: [requestId], references: [id])
+
+  @@unique([bookingId, heroId])
+  @@index([bookingId, status])
+  @@index([heroId, status])
+  @@map("booking_team_members")
+}
+
+model BookingTeamRequest {
+  id            Int                      @id @default(autoincrement())
+  bookingId     Int                      @map("booking_id")
+  inviterHeroId Int                      @map("inviter_hero_id")
+  inviteeHeroId Int                      @map("invitee_hero_id")
+  status        BookingTeamRequestStatus @default(PENDING)
+  message       String?                  @db.Text
+  respondedAt   DateTime?                @map("responded_at")
+  expiresAt     DateTime                 @map("expires_at")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  booking     Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  inviterHero Hero               @relation("BookingTeamRequestsSent", fields: [inviterHeroId], references: [id])
+  inviteeHero Hero               @relation("BookingTeamRequestsReceived", fields: [inviteeHeroId], references: [id])
+  teamMember  BookingTeamMember?
+
+  @@index([bookingId, status])
+  @@index([inviteeHeroId, status])
+  @@index([inviterHeroId, status])
+  @@index([status, expiresAt])
+  @@map("booking_team_requests")
+}
+
+model Invoice {
+  id             Int           @id @default(autoincrement())
+  invoiceNo      String        @unique @map("invoice_no") @db.VarChar(50)
+  bookingId      Int?          @map("booking_id")
+  customerId     Int?          @map("customer_id")
+  cityId         Int?          @map("city_id")
+  invoiceDate    DateTime?     @map("invoice_date") @db.Date
+  subtotal       Decimal       @default(0.00) @db.Decimal(10, 2)
+  discountTotal  Decimal       @default(0.00) @map("discount_total") @db.Decimal(10, 2)
+  taxTotal       Decimal       @default(0.00) @map("tax_total") @db.Decimal(10, 2)
+  payableTotal   Decimal       @default(0.00) @map("payable_total") @db.Decimal(10, 2)
+  totalPaid      Decimal       @default(0.00) @map("total_paid") @db.Decimal(10, 2)
+  billingName    String?       @map("billing_name") @db.VarChar(150)
+  billingAddress String?       @map("billing_address") @db.Text
+  billingCity    String?       @map("billing_city") @db.VarChar(100)
+  billingState   String?       @map("billing_state") @db.VarChar(100)
+  billingZip     String?       @map("billing_zip") @db.VarChar(10)
+  billingTaxId   String?       @map("billing_tax_id") @db.VarChar(25)
+  terms          String?       @db.Text
+  userNotes      String?       @map("user_notes") @db.Text
+  adminNotes     String?       @map("admin_notes") @db.Text
+  status         InvoiceStatus @default(CREATED)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  city     City?     @relation(fields: [cityId], references: [id])
+  payments Payment[]
+
+  @@index([bookingId])
+  @@index([customerId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  bookingId         Int?          @map("booking_id")
+  invoiceId         Int?          @map("invoice_id")
+  customerId        Int?          @map("customer_id")
+  recordedById      Int?          @map("recorded_by_id")
+  amount            Decimal       @db.Decimal(10, 2)
+  method            PaymentMethod
+  provider          String?       @db.VarChar(50)
+  providerPaymentId String?       @map("provider_payment_id") @db.VarChar(155)
+  providerOrderId   String?       @map("provider_order_id") @db.VarChar(155)
+  reference         String?       @db.VarChar(255)
+  notes             String?       @db.Text
+  status            PaymentStatus @default(PENDING)
+  paidAt            DateTime?     @map("paid_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  booking    Booking?       @relation(fields: [bookingId], references: [id])
+  invoice    Invoice?       @relation(fields: [invoiceId], references: [id])
+  customer   Customer?      @relation(fields: [customerId], references: [id])
+  recordedBy DashboardUser? @relation(fields: [recordedById], references: [id])
+  paymentAttempt PaymentAttempt?
+
+  @@index([bookingId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("payments")
+}
+
+model PaymentOrder {
+  id                Int                @id @default(autoincrement())
+  subjectType       PaymentSubjectType @map("subject_type")
+  subjectId         Int                @map("subject_id")
+  customerId        Int                @map("customer_id")
+  bookingId         Int?               @map("booking_id")
+  environment       PaymentEnvironment
+  provider          PaymentProvider    @default(ZOHO)
+  currency          String             @db.Char(3)
+  expectedAmount    Decimal            @map("expected_amount") @db.Decimal(10, 2)
+  capturedAmount    Decimal            @default(0.00) @map("captured_amount") @db.Decimal(10, 2)
+  refundedAmount    Decimal            @default(0.00) @map("refunded_amount") @db.Decimal(10, 2)
+  status            PaymentOrderStatus @default(CREATED)
+  commercialVersion Int                @default(1) @map("commercial_version")
+  quoteHash         String             @map("quote_hash") @db.Char(64)
+  quoteSnapshotJson Json               @map("quote_snapshot_json")
+  activeAttemptId   Int?               @unique @map("active_attempt_id")
+  idempotencyKey    String             @map("idempotency_key") @db.VarChar(120)
+  version           Int                @default(1)
+  paidAt            DateTime?          @map("paid_at") @db.DateTime(3)
+  failedAt          DateTime?          @map("failed_at") @db.DateTime(3)
+  cancelledAt       DateTime?          @map("cancelled_at") @db.DateTime(3)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.DateTime(3)
+
+  customer      Customer         @relation(fields: [customerId], references: [id])
+  booking       Booking?         @relation(fields: [bookingId], references: [id])
+  activeAttempt PaymentAttempt?  @relation("ActivePaymentAttempt", fields: [activeAttemptId], references: [id], onDelete: SetNull)
+  attempts      PaymentAttempt[] @relation("PaymentOrderAttempts")
+  auditLogs     PaymentAuditLog[]
+
+  @@unique([environment, subjectType, subjectId, commercialVersion], map: "payment_orders_subject_version_key")
+  @@unique([environment, idempotencyKey], map: "payment_orders_idempotency_key")
+  @@index([status, updatedAt], map: "payment_orders_status_updated_idx")
+  @@index([customerId, createdAt], map: "payment_orders_customer_created_idx")
+  @@index([bookingId], map: "payment_orders_booking_idx")
+  @@map("payment_orders")
+}
+
+model PaymentAttempt {
+  id                    Int                  @id @default(autoincrement())
+  orderId               Int                  @map("order_id")
+  legacyPaymentId       Int?                 @unique @map("legacy_payment_id")
+  provider              PaymentProvider      @default(ZOHO)
+  environment           PaymentEnvironment
+  attemptNumber         Int                  @map("attempt_number")
+  status                PaymentAttemptStatus @default(CREATING)
+  requestedAmount       Decimal              @map("requested_amount") @db.Decimal(10, 2)
+  currency              String               @db.Char(3)
+  providerPaymentLinkId String?               @map("provider_payment_link_id") @db.VarChar(155)
+  providerPaymentId     String?               @map("provider_payment_id") @db.VarChar(155)
+  providerReferenceId   String?               @map("provider_reference_id") @db.VarChar(155)
+  checkoutUrl           String?               @map("checkout_url") @db.Text
+  expiresAt             DateTime?             @map("expires_at") @db.DateTime(3)
+  failureCode           String?               @map("failure_code") @db.VarChar(100)
+  failureMessageSafe    String?               @map("failure_message_safe") @db.VarChar(500)
+  paidAt                DateTime?             @map("paid_at") @db.DateTime(3)
+  failedAt              DateTime?             @map("failed_at") @db.DateTime(3)
+  expiredAt             DateTime?             @map("expired_at") @db.DateTime(3)
+  createdAt             DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  order          PaymentOrder      @relation("PaymentOrderAttempts", fields: [orderId], references: [id], onDelete: Cascade)
+  activeForOrder PaymentOrder?     @relation("ActivePaymentAttempt")
+  legacyPayment  Payment?          @relation(fields: [legacyPaymentId], references: [id], onDelete: SetNull)
+  auditLogs      PaymentAuditLog[]
+
+  @@unique([orderId, attemptNumber], map: "payment_attempts_order_number_key")
+  @@unique([environment, providerPaymentLinkId], map: "payment_attempts_link_environment_key")
+  @@unique([environment, providerPaymentId], map: "payment_attempts_payment_environment_key")
+  @@index([status, updatedAt], map: "payment_attempts_status_updated_idx")
+  @@index([providerReferenceId], map: "payment_attempts_reference_idx")
+  @@map("payment_attempts")
+}
+
+model PaymentWebhookEvent {
+  id                    Int                            @id @default(autoincrement())
+  provider              PaymentProvider               @default(ZOHO)
+  environment           PaymentEnvironment
+  eventId               String                         @map("event_id") @db.VarChar(155)
+  eventType             String                         @map("event_type") @db.VarChar(100)
+  liveMode              Boolean                        @map("live_mode")
+  accountMatched        Boolean                        @map("account_matched")
+  payloadHash           String                         @map("payload_hash") @db.Char(64)
+  normalizedSubjectJson Json                           @map("normalized_subject_json")
+  processingStatus      PaymentWebhookProcessingStatus @default(RECEIVED) @map("processing_status")
+  attempts              Int                            @default(0)
+  lastErrorCode         String?                        @map("last_error_code") @db.VarChar(100)
+  receivedAt            DateTime                       @default(now()) @map("received_at") @db.DateTime(3)
+  processedAt           DateTime?                      @map("processed_at") @db.DateTime(3)
+  createdAt             DateTime                       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime                       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  auditLogs PaymentAuditLog[]
+
+  @@unique([provider, environment, eventId], map: "payment_webhook_events_provider_environment_event_key")
+  @@index([processingStatus, receivedAt], map: "payment_webhook_events_processing_received_idx")
+  @@index([eventType, receivedAt], map: "payment_webhook_events_type_received_idx")
+  @@map("payment_webhook_events")
+}
+
+model PaymentAuditLog {
+  id               Int                   @id @default(autoincrement())
+  orderId          Int?                  @map("order_id")
+  attemptId        Int?                  @map("attempt_id")
+  webhookEventId   Int?                  @map("webhook_event_id")
+  actorType        PaymentAuditActorType @map("actor_type")
+  actorId          Int?                  @map("actor_id")
+  action           String                @db.VarChar(100)
+  oldStatus        String?               @map("old_status") @db.VarChar(50)
+  newStatus        String?               @map("new_status") @db.VarChar(50)
+  reason           String?               @db.VarChar(500)
+  safeMetadataJson Json?                 @map("safe_metadata_json")
+  createdAt        DateTime              @default(now()) @map("created_at") @db.DateTime(3)
+
+  order        PaymentOrder?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  attempt      PaymentAttempt?      @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+  webhookEvent PaymentWebhookEvent? @relation(fields: [webhookEventId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt], map: "payment_audit_logs_order_created_idx")
+  @@index([attemptId, createdAt], map: "payment_audit_logs_attempt_created_idx")
+  @@index([webhookEventId], map: "payment_audit_logs_webhook_idx")
+  @@map("payment_audit_logs")
+}
+
+model Coupon {
+  id                Int          @id @default(autoincrement())
+  code              String       @unique @db.VarChar(50)
+  name              String       @db.VarChar(150)
+  title             String?      @db.VarChar(255)
+  description       String?      @db.Text
+  discountType      DiscountType @map("discount_type")
+  discountValue     Decimal      @map("discount_value") @db.Decimal(10, 2)
+  minCartAmount     Decimal?     @map("min_cart_amount") @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?     @map("max_discount_amount") @db.Decimal(10, 2)
+  cityId            Int?         @map("city_id")
+  isFeatured        Boolean      @default(false) @map("is_featured")
+  isActive          Boolean      @default(true) @map("is_active")
+  startsAt          DateTime?    @map("starts_at")
+  endsAt            DateTime?    @map("ends_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  city City? @relation(fields: [cityId], references: [id])
+
+  @@index([cityId])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+// ─── Social Posts ─────────────────────────────────────────────────────────────
+
+enum SocialPostCategory {
+  HIGHLIGHT
+  CELEBRATION
+}
+
+enum SocialPostMediaType {
+  IMAGE
+  VIDEO
+}
+
+model SocialPost {
+  id          Int                 @id @default(autoincrement())
+  category    SocialPostCategory  @default(HIGHLIGHT)
+  mediaType   SocialPostMediaType @default(IMAGE) @map("media_type")
+  title       String              @db.VarChar(150)
+  body        String?             @db.Text
+  imageUrl    String?             @map("image_url") @db.VarChar(500)
+  videoUrl    String?             @map("video_url") @db.VarChar(500)
+  heroName    String?             @map("hero_name") @db.VarChar(100)
+  heroId      Int?                @map("hero_id")
+  isPublished Boolean             @default(true) @map("is_published")
+  createdById Int?                @map("created_by_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  hero      Hero?          @relation(fields: [heroId], references: [id])
+  createdBy DashboardUser? @relation(fields: [createdById], references: [id])
+
+  @@index([category, isPublished])
+  @@index([createdAt])
+  @@map("social_posts")
+}
+
+// ─── Hero Leaves ───────────────────────────────────────────────────────────────
+model HeroLeave {
+  id              Int             @id @default(autoincrement())
+  heroId          Int             @map("hero_id")
+  type            HeroLeaveType
+  fromDate        DateTime        @map("from_date") @db.Date
+  toDate          DateTime        @map("to_date") @db.Date
+  isHalfDay       Boolean         @default(false) @map("is_half_day")
+  totalDays       Decimal         @map("total_days") @db.Decimal(4, 1)
+  reason          String          @db.Text
+  proofUrl        String?         @map("proof_url") @db.VarChar(500)
+  status          HeroLeaveStatus @default(PENDING)
+  reviewedById    Int?            @map("reviewed_by_id")
+  reviewedAt      DateTime?       @map("reviewed_at")
+  reviewNote      String?         @map("review_note") @db.Text
+  // Weekend leave requests — submitted by the hero themselves via
+  // POST /hero-leaves/weekend-request (bypasses the normal Sat/Sun block),
+  // pending admin review with an attached penalty amount on approval.
+  requestedByHero Boolean         @default(false) @map("requested_by_hero")
+  penaltyAmount   Decimal?        @map("penalty_amount") @db.Decimal(10, 2)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  hero       Hero           @relation(fields: [heroId], references: [id])
+  reviewedBy DashboardUser? @relation("LeaveReviewer", fields: [reviewedById], references: [id])
+
+  @@index([heroId, status])
+  @@index([fromDate])
+  @@map("hero_leaves")
+}
+
+// ── Off-day work request — hero asks to work on their weekly off day ──────────
+
+enum OffDayWorkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model OffDayWorkRequest {
+  id           Int              @id @default(autoincrement())
+  heroId       Int              @map("hero_id")
+  date         DateTime         @db.Date
+  reason       String           @db.Text
+  status       OffDayWorkStatus @default(PENDING)
+  reviewedById Int?             @map("reviewed_by_id")
+  reviewedAt   DateTime?        @map("reviewed_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  hero       Hero           @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  reviewedBy DashboardUser? @relation("OffDayReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([heroId, date])
+  @@index([heroId, status])
+  @@index([status])
+  @@map("off_day_work_requests")
+}
+
+// ─── Hero Team ─────────────────────────────────────────────────────────────────
+// One hero owns a team; other heroes join as members.
+model HeroTeamMember {
+  id        Int       @id @default(autoincrement())
+  ownerId   Int       @map("owner_id")
+  memberId  Int       @map("member_id")
+  joinedAt  DateTime  @default(now()) @map("joined_at")
+  leftAt    DateTime? @map("left_at")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  owner  Hero @relation("TeamOwner", fields: [ownerId], references: [id])
+  member Hero @relation("TeamMember", fields: [memberId], references: [id])
+
+  @@index([ownerId, isActive])
+  @@index([memberId, isActive])
+  @@map("hero_team_members")
+}
+
+model HeroTeamInvitation {
+  id          Int                  @id @default(autoincrement())
+  inviterId   Int                  @map("inviter_id")
+  inviteeId   Int                  @map("invitee_id")
+  status      TeamInvitationStatus @default(PENDING)
+  message     String?              @db.Text
+  respondedAt DateTime?            @map("responded_at")
+  expiresAt   DateTime             @map("expires_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  inviter Hero @relation("InvitationsSent", fields: [inviterId], references: [id])
+  invitee Hero @relation("InvitationsReceived", fields: [inviteeId], references: [id])
+
+  @@index([inviterId, status])
+  @@index([inviteeId, status])
+  @@map("hero_team_invitations")
+}
+
+// ─── Training Videos ──────────────────────────────────────────────────────────
+
+model TrainingVideo {
+  id              Int      @id @default(autoincrement())
+  categoryId      Int      @map("category_id")
+  title           String   @db.VarChar(200)
+  description     String?  @db.Text
+  videoUrl        String   @map("video_url") @db.VarChar(500)
+  thumbnailUrl    String?  @map("thumbnail_url") @db.VarChar(500)
+  durationSeconds Int?     @map("duration_seconds")
+  sortOrder       Int      @default(0) @map("sort_order")
+  isPublished     Boolean  @default(true) @map("is_published")
+  createdById     Int?     @map("created_by_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  category  ServiceCategory @relation(fields: [categoryId], references: [id])
+  createdBy DashboardUser?  @relation(fields: [createdById], references: [id])
+
+  @@index([categoryId, isPublished])
+  @@index([sortOrder])
+  @@map("training_videos")
+}
+
+// ─── Hero Certificates ────────────────────────────────────────────────────────
+
+enum CertificateFileType {
+  IMAGE
+  PDF
+}
+
+model HeroCertificate {
+  id           Int                 @id @default(autoincrement())
+  heroId       Int                 @map("hero_id")
+  title        String              @db.VarChar(200)
+  description  String?             @db.Text
+  fileUrl      String              @map("file_url") @db.VarChar(500)
+  fileType     CertificateFileType @default(IMAGE) @map("file_type")
+  thumbnailUrl String?             @map("thumbnail_url") @db.VarChar(500)
+  issuedDate   DateTime?           @map("issued_date") @db.Date
+  validUntil   DateTime?           @map("valid_until") @db.Date
+  isActive     Boolean             @default(true) @map("is_active")
+  createdById  Int?                @map("created_by_id")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  hero      Hero           @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  createdBy DashboardUser? @relation("CertificateCreator", fields: [createdById], references: [id])
+
+  @@index([heroId, isActive])
+  @@map("hero_certificates")
+}
+
+// ─── Jiffit Shop ──────────────────────────────────────────────────────────────
+
+model ShopCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  iconUrl   String?  @map("icon_url") @db.VarChar(500)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products ShopProduct[]
+
+  @@map("shop_categories")
+}
+
+model ShopProduct {
+  id                Int      @id @default(autoincrement())
+  shopCategoryId    Int      @map("shop_category_id")
+  // If set, only heroes whose skills include this service category will see this product.
+  // If null, product is "general" and visible to all heroes (shirts, gloves, safety gear).
+  serviceCategoryId Int?     @map("service_category_id")
+  name              String   @db.VarChar(200)
+  description       String?  @db.Text
+  imageUrl          String?  @map("image_url") @db.VarChar(500)
+  price             Decimal  @db.Decimal(10, 2)
+  mrp               Decimal? @db.Decimal(10, 2)
+  sizes             String?  @db.VarChar(150) // comma-separated: "S,M,L,XL" or empty for one-size
+  stock             Int      @default(0)
+  sortOrder         Int      @default(0) @map("sort_order")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdById       Int?     @map("created_by_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  shopCategory    ShopCategory     @relation(fields: [shopCategoryId], references: [id])
+  serviceCategory ServiceCategory? @relation("ShopProductServiceCategory", fields: [serviceCategoryId], references: [id])
+  createdBy       DashboardUser?   @relation(fields: [createdById], references: [id])
+
+  @@index([shopCategoryId])
+  @@index([serviceCategoryId])
+  @@index([isActive])
+  @@map("shop_products")
+}
+
+// ─── FAQs ─────────────────────────────────────────────────────────────────────
+
+model Faq {
+  id          Int      @id @default(autoincrement())
+  category    String?  @db.VarChar(80) // e.g. "Attendance", "Payments", "Bookings"
+  question    String   @db.VarChar(300)
+  answer      String   @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdById Int?     @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdBy DashboardUser? @relation(fields: [createdById], references: [id])
+
+  @@index([isActive, sortOrder])
+  @@map("faqs")
+}
+
+// ─── Support Chat ─────────────────────────────────────────────────────────────
+
+enum SupportThreadStatus {
+  OPEN
+  CLOSED
+}
+
+enum SupportSenderType {
+  HERO
+  CUSTOMER
+  ADMIN
+}
+
+model SupportChatThread {
+  id               Int                 @id @default(autoincrement())
+  heroId           Int?                @map("hero_id")
+  customerId       Int?                @map("customer_id")
+  subject          String?             @db.VarChar(200)
+  status           SupportThreadStatus @default(OPEN)
+  lastMessageAt    DateTime            @default(now()) @map("last_message_at")
+  lastMessage      String?             @map("last_message") @db.VarChar(500)
+  unreadByAdmin    Int                 @default(0) @map("unread_by_admin")
+  unreadByHero     Int                 @default(0) @map("unread_by_hero")
+  unreadByCustomer Int                 @default(0) @map("unread_by_customer")
+  closedAt         DateTime?           @map("closed_at")
+  closedById       Int?                @map("closed_by_id")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  hero     Hero?                @relation(fields: [heroId], references: [id], onDelete: Cascade)
+  customer Customer?            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  messages SupportChatMessage[]
+
+  @@index([heroId, status])
+  @@index([customerId, status])
+  @@index([status, lastMessageAt])
+  @@map("support_chat_threads")
+}
+
+model SupportChatMessage {
+  id            Int               @id @default(autoincrement())
+  threadId      Int               @map("thread_id")
+  senderType    SupportSenderType @map("sender_type")
+  senderAdminId Int?              @map("sender_admin_id")
+  text          String            @db.Text
+  isRead        Boolean           @default(false) @map("is_read")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  thread      SupportChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderAdmin DashboardUser?    @relation(fields: [senderAdminId], references: [id])
+
+  @@index([threadId, createdAt])
+  @@map("support_chat_messages")
+}
+
+model BookingReview {
+  id            Int      @id @default(autoincrement())
+  bookingId     Int      @unique @map("booking_id")
+  customerId    Int      @map("customer_id")
+  heroId        Int?     @map("hero_id")
+  serviceRating Int      @map("service_rating")
+  heroRating    Int?     @map("hero_rating")
+  comment       String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  hero     Hero?    @relation(fields: [heroId], references: [id], onDelete: SetNull)
+
+  @@index([customerId, createdAt])
+  @@index([heroId, createdAt])
+  @@map("booking_reviews")
+}
+
+// ─── Hero Wallet (for referral bonus + future earnings) ────────────────────────
+
+enum WalletTransactionType {
+  REFERRAL_BONUS
+  BOOKING_EARNING
+  INCENTIVE_BONUS
+  WITHDRAWAL
+  ADJUSTMENT
+  PENALTY
+}
+
+model HeroWalletTransaction {
+  id          Int                   @id @default(autoincrement())
+  heroId      Int                   @map("hero_id")
+  type        WalletTransactionType
+  amount      Decimal               @db.Decimal(10, 2)
+  description String?               @db.VarChar(255)
+  referenceId Int?                  @map("reference_id") // e.g. bookingId, referredHeroId
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  hero Hero @relation(fields: [heroId], references: [id])
+
+  @@index([heroId, createdAt])
+  @@map("hero_wallet_transactions")
+}
+
+enum CustomerWalletTransactionType {
+  REFERRAL_BONUS
+  ADJUSTMENT
+}
+
+model CustomerWalletTransaction {
+  id          Int                           @id @default(autoincrement())
+  customerId  Int                           @map("customer_id")
+  type        CustomerWalletTransactionType
+  amount      Decimal                       @db.Decimal(10, 2)
+  description String?                       @db.VarChar(255)
+  referenceId Int?                          @map("reference_id") // e.g. bookingId, referredCustomerId
+  createdAt   DateTime                      @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId, createdAt])
+  @@map("customer_wallet_transactions")
+}
+
+// ─── Jiffit Coins (separate ledger from the rupee wallet above) ───────────────
+
+enum CustomerCoinTxType {
+  BOOKING_REWARD
+  REFERRAL_BONUS
+  SIGNUP_BONUS
+  REDEMPTION // negative amount — coins used at checkout
+  EXPIRY // negative amount — coins expired
+  MANUAL_CREDIT // admin adjustment
+  MANUAL_DEBIT // admin adjustment
+}
+
+model CustomerCoinTransaction {
+  id          Int                @id @default(autoincrement())
+  customerId  Int                @map("customer_id")
+  type        CustomerCoinTxType
+  amount      Int // positive = credit, negative = debit
+  description String             @db.VarChar(255)
+  referenceId String?            @map("reference_id")
+  expiresAt   DateTime?          @map("expires_at")
+  // Cron-only bookkeeping: has this row already been folded into an EXPIRY
+  // audit entry? Deliberately NOT used by the balance calculation (which
+  // relies solely on expiresAt, so balance is correct in real time even if
+  // the cron hasn't run yet) — this exists only so the nightly cron doesn't
+  // recreate the same "Coins expired" audit row every night forever. See
+  // coins.service.ts expireOldCoins() for the full reasoning.
+  expired     Boolean            @default(false)
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+  @@index([expiresAt])
+  @@map("customer_coin_transactions")
+}
+
+// ─── HRA: Human Resources Administration ──────────────────────────────────────
+
+enum HraAttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+}
+
+enum HraLeaveType {
+  CASUAL
+  SICK
+  PAID
+  UNPAID
+  COMP_OFF
+}
+
+enum HraLeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum HolidayType {
+  WEEKLY_HOLIDAY
+  PUBLIC_HOLIDAY
+  CELEBRATION
+  NATIONAL
+  REGIONAL
+  COMPANY
+  OPTIONAL
+}
+
+model DashboardUserAttendance {
+  id                Int                 @id @default(autoincrement())
+  userId            Int                 @map("user_id")
+  attendanceDate    DateTime            @map("attendance_date") @db.Date
+  checkInAt         DateTime            @map("check_in_at")
+  checkOutAt        DateTime?           @map("check_out_at")
+  checkInSelfieUrl  String?             @map("check_in_selfie_url") @db.VarChar(500)
+  checkInLatitude   Decimal?            @map("check_in_latitude") @db.Decimal(10, 7)
+  checkInLongitude  Decimal?            @map("check_in_longitude") @db.Decimal(10, 7)
+  hubDistanceMeters Int?                @map("hub_distance_meters")
+  status            HraAttendanceStatus @default(PRESENT)
+  notes             String?             @db.Text
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  user DashboardUser @relation(fields: [userId], references: [id])
+
+  @@unique([userId, attendanceDate])
+  @@index([userId])
+  @@index([attendanceDate])
+  @@map("dashboard_user_attendance")
+}
+
+model DashboardUserLeave {
+  id           Int            @id @default(autoincrement())
+  userId       Int            @map("user_id")
+  type         HraLeaveType
+  fromDate     DateTime       @map("from_date") @db.Date
+  toDate       DateTime       @map("to_date") @db.Date
+  reason       String         @db.Text
+  status       HraLeaveStatus @default(PENDING)
+  reviewedById Int?           @map("reviewed_by_id")
+  reviewedAt   DateTime?      @map("reviewed_at")
+  reviewNote   String?        @map("review_note") @db.Text
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  user       DashboardUser  @relation("HraLeaveOwner", fields: [userId], references: [id])
+  reviewedBy DashboardUser? @relation("HraLeaveReviewer", fields: [reviewedById], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@map("dashboard_user_leaves")
+}
+
+model Holiday {
+  id        Int         @id @default(autoincrement())
+  date      DateTime    @db.Date
+  name      String      @db.VarChar(150)
+  type      HolidayType @default(NATIONAL)
+  weekday   String?     @db.VarChar(3)
+  stateId   Int?        @map("state_id")
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  state State? @relation(fields: [stateId], references: [id])
+
+  @@index([date])
+  @@map("holidays")
+}
+
+model Announcement {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(200)
+  body        String    @db.Text
+  audience    String    @default("ALL") @db.VarChar(20) // ALL | DASHBOARD | HEROES
+  authorId    Int       @map("author_id")
+  publishedAt DateTime  @default(now()) @map("published_at")
+  expiresAt   DateTime? @map("expires_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  author DashboardUser @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+
+  @@index([publishedAt])
+  @@map("announcements")
+}
+
+model PushNotificationLog {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  body        String   @db.Text
+  imageUrl    String?  @map("image_url") @db.VarChar(500)
+  audience    String   @default("ALL") @db.VarChar(20) // ALL | CITY | HUB | SPECIFIC
+  audienceId  Int?     @map("audience_id") // cityId or hubId when relevant
+  sentCount   Int      @default(0) @map("sent_count")
+  failedCount Int      @default(0) @map("failed_count")
+  sentById    Int?     @map("sent_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("push_notification_logs")
+}
+
+// ─── HR: Payroll ──────────────────────────────────────────────────────────────
+
+enum PayrollSubjectType {
+  EMPLOYEE
+  HERO
+}
+
+enum PayrollComponentType {
+  ALLOWANCE
+  DEDUCTION
+}
+
+model PayrollComponent {
+  id          Int                  @id @default(autoincrement())
+  subjectType PayrollSubjectType   @map("subject_type")
+  subjectId   Int                  @map("subject_id")
+  name        String               @db.VarChar(100)
+  type        PayrollComponentType
+  amount      Decimal              @db.Decimal(10, 2)
+  isRecurring Boolean              @default(true) @map("is_recurring")
+  notes       String?              @db.Text
+  isActive    Boolean              @default(true) @map("is_active")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  @@index([subjectType, subjectId])
+  @@map("payroll_components")
+}
+
+model Payslip {
+  id              Int                @id @default(autoincrement())
+  subjectType     PayrollSubjectType @map("subject_type")
+  subjectId       Int                @map("subject_id")
+  month           Int // 1-12
+  year            Int
+  basicSalary     Decimal            @map("basic_salary") @db.Decimal(10, 2)
+  allowancesTotal Decimal            @map("allowances_total") @db.Decimal(10, 2)
+  deductionsTotal Decimal            @map("deductions_total") @db.Decimal(10, 2)
+  netSalary       Decimal            @map("net_salary") @db.Decimal(10, 2)
+  workingDays     Int                @map("working_days")
+  presentDays     Int                @map("present_days")
+  componentsJson  String             @map("components_json") @db.Text
+  notes           String?            @db.Text
+  generatedById   Int?               @map("generated_by_id")
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  @@unique([subjectType, subjectId, month, year])
+  @@index([subjectType, subjectId])
+  @@map("payslips")
+}
+
+// ─── HR: Leave balances + quotas ──────────────────────────────────────────────
+
+enum LeaveQuotaScope {
+  DASHBOARD_ROLE
+  ALL_HEROES
+}
+
+model LeaveQuota {
+  id          Int             @id @default(autoincrement())
+  scope       LeaveQuotaScope
+  roleKey     String?         @map("role_key") @db.VarChar(50) // when scope=DASHBOARD_ROLE: "SUPER_ADMIN" | "ADMIN" | "HR" | "OPERATIONS"
+  type        HraLeaveType
+  daysPerYear Int             @map("days_per_year")
+  isActive    Boolean         @default(true) @map("is_active")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@unique([scope, roleKey, type])
+  @@map("leave_quotas")
+}
+
+// Dashboard-configurable thresholds/amounts for the automatic penalty rules
+// in src/modules/rules-engine/penalty-rules.ts. The trigger logic for each
+// ruleKey is fixed in code; what's editable here is whether it's on, its
+// grace period/threshold, and its amount — i.e. the "leniency" knobs.
+model PenaltyRule {
+  id             Int      @id @default(autoincrement())
+  ruleKey        String   @unique @db.VarChar(50)
+  label          String   @db.VarChar(150)
+  description    String?  @db.Text
+  enabled        Boolean  @default(true)
+  graceMinutes   Int?     @map("grace_minutes")
+  windowDays     Int?     @map("window_days")
+  minAssignments Int?     @map("min_assignments")
+  maxRate        Decimal? @map("max_rate") @db.Decimal(4, 3) // fraction 0–1, e.g. 0.300 = 30%
+  amount         Decimal  @db.Decimal(10, 2)
+  updatedById    Int?     @map("updated_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("penalty_rules")
+}
+
+enum AppSettingType {
+  STRING
+  JSON
+  NUMBER
+  BOOLEAN
+}
+
+enum OperationalSettingScope {
+  GLOBAL
+  STATE
+  HUB
+}
+
+enum ScheduleSubjectType {
+  HERO
+  EMPLOYEE
+}
+
+model AppSetting {
+  key       String         @id @db.VarChar(100)
+  value     String         @db.LongText
+  type      AppSettingType @default(STRING)
+  category  String         @db.VarChar(50) // content | support | schedule | lunch | incentives | notifications
+  label     String         @db.VarChar(200)
+  isPublic  Boolean        @default(true) @map("is_public") // exposed via /settings/hero (public read)
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("app_settings")
+}
+
+model OperationalSetting {
+  id                   Int                     @id @default(autoincrement())
+  scope                OperationalSettingScope
+  scopeKey             String                  @unique @map("scope_key") @db.VarChar(50)
+  stateId              Int?                    @map("state_id")
+  hubId                Int?                    @map("hub_id")
+  shiftStart           String                  @default("09:30") @map("shift_start") @db.VarChar(5)
+  shiftEnd             String                  @default("18:30") @map("shift_end") @db.VarChar(5)
+  weeklyOffs           Json                    @map("weekly_offs")
+  scheduleEnabled      Boolean                 @default(true) @map("schedule_enabled")
+  scheduleColor        String?                 @map("schedule_color") @db.VarChar(20)
+  lunchEnabled         Boolean                 @default(true) @map("lunch_enabled")
+  lunchDurationMinutes Int                     @default(30) @map("lunch_duration_minutes")
+  lunchAllowedFromTime String                  @default("12:30") @map("lunch_allowed_from_time") @db.VarChar(5)
+  lunchAllowedToTime   String                  @default("15:00") @map("lunch_allowed_to_time") @db.VarChar(5)
+  createdAt            DateTime                @default(now()) @map("created_at")
+  updatedAt            DateTime                @updatedAt @map("updated_at")
+
+  state            State?                 @relation(fields: [stateId], references: [id])
+  hub              Hub?                   @relation(fields: [hubId], references: [id])
+  lunchAssignments LunchBreakAssignment[]
+
+  @@index([scope])
+  @@index([stateId])
+  @@index([hubId])
+  @@map("operational_settings")
+}
+
+model LunchBreakAssignment {
+  id                   Int                 @id @default(autoincrement())
+  operationalSettingId Int                 @map("operational_setting_id")
+  subjectType          ScheduleSubjectType @map("subject_type")
+  subjectId            Int                 @map("subject_id")
+  createdAt            DateTime            @default(now()) @map("created_at")
+
+  setting OperationalSetting @relation(fields: [operationalSettingId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectType, subjectId])
+  @@index([operationalSettingId])
+  @@map("lunch_break_assignments")
+}
+
+model WorkSchedule {
+  id             Int                     @id @default(autoincrement())
+  name           String                  @db.VarChar(120)
+  scope          OperationalSettingScope
+  stateId        Int?                    @map("state_id")
+  hubId          Int?                    @map("hub_id")
+  shiftStart     String                  @default("09:30") @map("shift_start") @db.VarChar(5)
+  shiftEnd       String                  @default("18:30") @map("shift_end") @db.VarChar(5)
+  scheduleColor  String?                 @map("schedule_color") @db.VarChar(20)
+  isActive       Boolean                 @default(true) @map("is_active")
+  bookingEnabled Boolean                 @default(true) @map("booking_enabled")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+
+  state                State?                         @relation(fields: [stateId], references: [id])
+  hub                  Hub?                           @relation(fields: [hubId], references: [id])
+  assignments          WorkScheduleAssignment[]
+  capacityDailyEntries BookingCapacityDaily[]
+  capacityGroupLinks   BookingCapacityGroupSchedule[]
+
+  @@index([scope])
+  @@index([stateId])
+  @@index([hubId])
+  @@map("work_schedules")
+}
+
+model WorkScheduleAssignment {
+  id          Int                 @id @default(autoincrement())
+  scheduleId  Int                 @map("schedule_id")
+  subjectType ScheduleSubjectType @map("subject_type")
+  subjectId   Int                 @map("subject_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  schedule WorkSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectType, subjectId])
+  @@index([scheduleId])
+  @@index([subjectType, subjectId])
+  @@map("work_schedule_assignments")
+}
+
+model DashboardLoginLog {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  loggedInAt        DateTime @default(now()) @map("logged_in_at")
+  selfieUrl         String?  @map("selfie_url") @db.VarChar(500)
+  latitude          Decimal? @db.Decimal(10, 7)
+  longitude         Decimal? @db.Decimal(10, 7)
+  hubDistanceMeters Int?     @map("hub_distance_meters")
+  attendanceMarked  Boolean  @default(false) @map("attendance_marked")
+  blockedReason     String?  @map("blocked_reason") @db.VarChar(50)
+  userAgent         String?  @map("user_agent") @db.VarChar(255)
+  ipAddress         String?  @map("ip_address") @db.VarChar(45)
+
+  user DashboardUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([loggedInAt])
+  @@map("dashboard_login_logs")
+}
+
+model LeaveBalance {
+  id          Int                @id @default(autoincrement())
+  subjectType PayrollSubjectType @map("subject_type")
+  subjectId   Int                @map("subject_id")
+  year        Int
+  type        HraLeaveType
+  allotted    Decimal            @db.Decimal(5, 1)
+  used        Decimal            @default(0) @db.Decimal(5, 1)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  @@unique([subjectType, subjectId, year, type])
+  @@index([subjectType, subjectId])
+  @@map("leave_balances")
+}
+
+// ── Incentive Plans ───────────────────────────────────────────────────────────
+
+enum IncentiveScope {
+  STATE
+  HUB
+}
+
+enum IncentivePlanType {
+  GENERAL
+  OVERTIME
+}
+
+model IncentivePlan {
+  id                  Int               @id @default(autoincrement())
+  planType            IncentivePlanType @default(GENERAL) @map("plan_type")
+  scope               IncentiveScope
+  stateId             Int?              @map("state_id")
+  hubId               Int?              @map("hub_id")
+  name                String            @db.VarChar(120)
+  overtimeRatePerHour Decimal           @default(0) @map("overtime_rate_per_hour") @db.Decimal(10, 2)
+  isActive            Boolean           @default(true) @map("is_active")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  state State?          @relation(fields: [stateId], references: [id])
+  hub   Hub?            @relation(fields: [hubId], references: [id])
+  tiers IncentiveTier[]
+
+  @@index([scope])
+  @@index([stateId])
+  @@index([hubId])
+  @@map("incentive_plans")
+}
+
+model IncentiveTier {
+  id            Int      @id @default(autoincrement())
+  planId        Int      @map("plan_id")
+  targetRevenue Decimal  @map("target_revenue") @db.Decimal(10, 2)
+  bonusAmount   Decimal  @map("bonus_amount") @db.Decimal(10, 2)
+  label         String?  @db.VarChar(120)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  plan IncentivePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@map("incentive_tiers")
+}
+
+// ── Daily Hero Capacity ────────────────────────────────────────────────────────
+// Admin sets expected hero count per hub + service group per day.
+// Drives customer-facing slot availability (pool arithmetic).
+model DailyHeroCapacity {
+  id             Int      @id @default(autoincrement())
+  capacityDate   DateTime @map("capacity_date") @db.Date
+  serviceGroupId Int      @map("service_group_id")
+  hubId          Int      @map("hub_id")
+  heroCount      Int      @default(0) @map("hero_count")
+  setById        Int      @map("set_by_id")
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  serviceGroup ServiceGroup  @relation(fields: [serviceGroupId], references: [id])
+  hub          Hub           @relation(fields: [hubId], references: [id])
+  setBy        DashboardUser @relation("DailyCapacitySetBy", fields: [setById], references: [id])
+
+  @@unique([capacityDate, serviceGroupId, hubId])
+  @@index([capacityDate, hubId])
+  @@map("daily_hero_capacities")
+}
+
+// ─── Custom Capacity Groups (dashboard-user-defined, per hub) ─────────────────
+
+model BookingCapacityGroup {
+  id          Int      @id @default(autoincrement())
+  hubId       Int      @map("hub_id")
+  name        String   @db.VarChar(120)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdById Int      @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  hub         Hub                            @relation(fields: [hubId], references: [id])
+  createdBy   DashboardUser                  @relation("CapacityGroupCreatedBy", fields: [createdById], references: [id])
+  services    BookingCapacityGroupService[]
+  schedules   BookingCapacityGroupSchedule[]
+  dailyCounts BookingCapacityDaily[]
+
+  @@index([hubId])
+  @@map("booking_capacity_groups")
+}
+
+model BookingCapacityGroupService {
+  id        Int @id @default(autoincrement())
+  groupId   Int @map("group_id")
+  serviceId Int @map("service_id")
+
+  group   BookingCapacityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  service Service              @relation(fields: [serviceId], references: [id])
+
+  @@unique([groupId, serviceId])
+  @@map("booking_capacity_group_services")
+}
+
+model BookingCapacityGroupSchedule {
+  id             Int      @id @default(autoincrement())
+  groupId        Int      @map("group_id")
+  workScheduleId Int      @map("work_schedule_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  group        BookingCapacityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  workSchedule WorkSchedule         @relation(fields: [workScheduleId], references: [id])
+
+  @@unique([groupId, workScheduleId])
+  @@index([groupId])
+  @@map("booking_capacity_group_schedules")
+}
+
+model BookingCapacityDaily {
+  id             Int      @id @default(autoincrement())
+  groupId        Int      @map("group_id")
+  capacityDate   DateTime @map("capacity_date") @db.Date
+  workScheduleId Int      @map("work_schedule_id")
+  heroCount      Int      @default(0) @map("hero_count")
+  notes          String?  @db.Text
+  setById        Int      @map("set_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  group        BookingCapacityGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  workSchedule WorkSchedule         @relation(fields: [workScheduleId], references: [id])
+  setBy        DashboardUser        @relation("CapacityDailySetBy", fields: [setById], references: [id])
+
+  @@unique([groupId, capacityDate, workScheduleId])
+  @@index([groupId, capacityDate])
+  @@map("booking_capacity_daily")
+}
