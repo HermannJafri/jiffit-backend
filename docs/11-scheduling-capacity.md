@@ -2,18 +2,21 @@
 
 ## Canonical slot source: capacity pool
 
-`getPoolSlotAvailability` (rewrite: `daily-capacity/slot-pool.service.ts`) is the customer-facing slot calculator.
+`getPoolSlotAvailability` (`src/modules/daily-capacity/slot-pool.service.ts`) is the only live slot calculator.
 
-Rules to preserve:
+Customer `POST /api/v1/customer/me/booking-slots/calculate` and dashboard `GET /api/v1/bookings/slots/availability` both call it. If the customer omits a date, the API scans the next 14 IST days and returns up to 4 dates that still have available pool slots.
+
+Rules preserved:
 
 1. Resolve nearest hub in radius that offers the service.
-2. Capacity group for that hub + service group.
-3. Daily hero pools per shift from `BookingCapacityDaily` / schedules.
+2. Capacity group for that hub + service.
+3. Daily hero pools per shift from `BookingCapacityDaily` (global day-shift schedules with pool 0 if none configured).
 4. Same-day after shift start: clamp pool to **actual check-ins**.
-5. Buffer minutes from settings (`booking.bufferMinutes`).
-6. Duration from catalog (service + variant) including worker count.
-7. Overtime quoted from `IncentivePlan(OVERTIME)` when the job spills past shift end.
+5. Buffer minutes from `app_settings.booking.bufferMinutes` (default 15).
+6. Duration from catalog (variant then service), **quantity multiplies time**.
+7. Overtime quotes from `IncentivePlan(OVERTIME)` are **not wired yet** — in-shift slots only until the incentives module lands.
 8. Timezone: IST (`+05:30`). Persist `slotStartAt` / `slotEndAt` as DateTime.
+9. First bookable slot is shift start + 30 minutes; same-day minimum advance is 60 minutes; 15-minute grid; no overnight spill.
 
 ## Deprecated for live booking
 

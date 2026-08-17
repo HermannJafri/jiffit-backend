@@ -2,22 +2,26 @@ import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError, fail } from '../utils/http';
 import { logger } from '../utils/logger';
+import { toBookingHttpError } from '../modules/bookings/booking-errors';
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
-  if (err instanceof ZodError) {
+  const mapped = toBookingHttpError(err);
+  const error = mapped instanceof AppError || mapped instanceof ZodError ? mapped : err;
+
+  if (error instanceof ZodError) {
     fail(res, 400, 'Invalid request', 'VALIDATION_ERROR', {
-      issues: err.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
+      issues: error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
     });
     return;
   }
 
-  if (err instanceof AppError) {
-    fail(res, err.statusCode, err.message, err.code, err.details);
+  if (error instanceof AppError) {
+    fail(res, error.statusCode, error.message, error.code, error.details);
     return;
   }
 
-  const message = err instanceof Error ? err.message : 'Unknown error';
-  logger.error(message, err instanceof Error ? err.stack : err);
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  logger.error(message, error instanceof Error ? error.stack : error);
   fail(res, 500, 'Internal server error');
 }
 

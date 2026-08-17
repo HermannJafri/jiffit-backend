@@ -52,8 +52,8 @@ See `docs/00-index.md` for the full index.
 | Public hub-scoped catalog | IMPLEMENTED / TESTED (haversine hub picker unit tests) |
 | Customer addresses | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
 | Geography (states/cities/hubs) | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
-| Booking engine | NOT IMPLEMENTED |
-| Scheduling / capacity | NOT IMPLEMENTED |
+| Booking engine | IMPLEMENTED / PARTIALLY TESTED (unit tests; needs MySQL for API integration) |
+| Scheduling / capacity | IMPLEMENTED / PARTIALLY TESTED (pool core unit-tested; overtime quotes and live ETA overlay not yet) |
 | Hero assignment / ETA dispatch | NOT IMPLEMENTED |
 | Zoho payments | NOT IMPLEMENTED |
 | Notifications / FCM | NOT IMPLEMENTED |
@@ -67,7 +67,7 @@ See `docs/00-index.md` for the full index.
 ## WHAT HAS BEEN TESTED
 
 - Backend `tsc` clean
-- Unit tests: Indian mobile normalize, production OTP safety, hero auth gating, slugify, haversine hub picker
+- Unit tests: Indian mobile normalize, production OTP safety, hero auth gating, slugify, haversine hub picker, booking transitions, catalog pricing, slot-pool math
 - Prisma client generate
 - Initial MySQL migration SQL generated from schema (`prisma/migrations/20260817000000_init`)
 - Next.js dashboard production build (scaffold)
@@ -79,7 +79,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Next: booking creation + canonical capacity-pool slots, then dispatch.
+Next: Hero eligibility + ETA dispatch / assignment, then Zoho payments.
 
 ---
 
@@ -115,7 +115,7 @@ Follow the development order in `docs/08-target-architecture.md`:
 ## WHAT SHOULD HAPPEN NEXT
 
 1. Point `DATABASE_URL` at a local/staging MySQL 8 database and run `npx prisma migrate deploy` + `npm run db:seed`.
-2. Implement booking create + capacity-pool slots.
+2. Implement Hero eligibility + ETA dispatch (cash bookings stay `PENDING_ASSIGNMENT` until then).
 3. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
 
 ---

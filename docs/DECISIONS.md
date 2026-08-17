@@ -36,6 +36,6 @@ Customer/Hero: Jiffit purple (`#7C3AED` / `#803BA3`). Dashboard: indigo ops cons
 
 `tasks` become `LegacyBookingVisit`, never live `BookingAssignment`. Avoids 100k rows driving dispatch.
 
-## ADR-010 — Zod at the HTTP boundary
+## ADR-011 — Catalog prices are authoritative for every actor
 
-Stricter than express-validator, one schema language, good TypeScript inference.
+Dashboard cash bookings in the rewrite could accept client-supplied totals. The rebuild always prices from catalog (`Service.price` / variant `singlePrice` then `mrp`, plus tax). Clients cannot set payable totals.

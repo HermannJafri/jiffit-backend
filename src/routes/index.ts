@@ -7,6 +7,7 @@ import { customerAppRouter } from '../modules/customer-app/customer-app.routes';
 import { geographyRouter } from '../modules/geography/geography.routes';
 import { heroAuthRouter } from '../modules/hero-auth/hero-auth.routes';
 import { publicRouter } from '../modules/public/public.routes';
+import { bookingRouter } from '../modules/bookings/booking.routes';
 import { refreshDashboard } from '../modules/auth/auth.service';
 import { validate } from '../middleware/validate';
 import { ok } from '../utils/http';
@@ -31,4 +32,5 @@ apiRouter.post(
 apiRouter.use('/public', publicRouter);
 apiRouter.use('/geography', geographyRouter);
 apiRouter.use('/catalog', catalogRouter);
+apiRouter.use('/bookings', bookingRouter);
 apiRouter.use('/customer/me', customerAppRouter);

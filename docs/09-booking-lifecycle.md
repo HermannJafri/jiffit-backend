@@ -25,9 +25,10 @@ CANCELLED / REFUNDED / LEGACY_ARCHIVED are terminal
 
 ## Cancellation
 
-- Customer cannot cancel after `ARRIVED` / `IN_PROGRESS`.
-- Paid online cancel before start OTP → refund-pending audit (no silent gateway refund until that flow is implemented and tested).
-- Cancel releases assignment, team, route reservation, dispatch offers. No FCM to “new offer” for the cancelled job.
+- Customer cannot cancel `IN_PROGRESS` (not in the customer transition map).
+- Paid online cancel after start OTP or `IN_PROGRESS` is blocked (`PAID_BOOKING_SERVICE_ALREADY_STARTED`).
+- Paid online cancel before start OTP records `CUSTOMER_CANCELLED_REFUND_REQUIRED` — audit only until Zoho refunds are implemented.
+- Cancel releases assignment, team, route reservation, and dispatch offers. No FCM in this milestone.
 
 ## Reschedule
 
@@ -35,9 +36,20 @@ The rewrite has **no first-class customer reschedule API**. Dashboard can update
 
 ## Photos and OTP
 
-- `startOtp` required to enter `IN_PROGRESS`.
+- `startOtp` is generated at booking create for field jobs and is required later to enter `IN_PROGRESS`.
 - After photo required to complete.
 - Before photo required by hero app flow (preserve).
+
+## Implemented APIs (this rebuild)
+
+- `POST /api/v1/customer/me/booking-slots/calculate` — capacity pool (optional date; otherwise next 14 IST days / up to 4 dates with availability)
+- `POST /api/v1/customer/me/bookings` — catalog-priced create, idempotent, slot re-check
+- `GET /api/v1/customer/me/bookings` and `GET /api/v1/customer/me/bookings/:id`
+- `PATCH /api/v1/customer/me/bookings/:id/cancel`
+- `GET /api/v1/bookings` / `POST /api/v1/bookings` / `GET /api/v1/bookings/:id` / `PATCH /api/v1/bookings/:id/cancel`
+- `GET /api/v1/bookings/slots/availability` and `/slots/service-availability` — same pool
+
+Not in this milestone: Zoho PaymentOrder, dispatch, coins, coupons, package visit booking endpoint, customer self-reschedule.
 
 ## Historical imports
 
