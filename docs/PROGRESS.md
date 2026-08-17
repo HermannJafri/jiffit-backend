@@ -43,7 +43,8 @@ Local MySQL 8.0.46 (`MySQL80`) with dedicated `jiffit_dev`. Dashboard login `adm
 
 | Item | Why |
 |------|-----|
-| Production OTP / FCM / Maps / Zoho / Spaces | Credentials the rebuild must not copy |
+| Isolated DigitalOcean staging | No `doctl` and no `DIGITALOCEAN_ACCESS_TOKEN` in this environment; live apps/databases cannot be listed or created |
+| Production OTP / FCM / Maps / Zoho / Spaces | Credentials the rebuild must not copy; not required for staging visual testing |
 | Final production migration | Needs a **fresh** dump from old production |
 | Firebase / Google Services JSON for mobile | Manual |
 | App signing / store listings | Manual |
@@ -52,10 +53,10 @@ Local MySQL 8.0.46 (`MySQL80`) with dedicated `jiffit_dev`. Dashboard login `adm
 
 ## WHAT SHOULD HAPPEN NEXT
 
-1. Obtain a fresh production SQL dump and repeat the isolated restore/apply/reconciliation procedure before cutover.
-2. Open Dashboard against the running API (`npm run dev` in `jiffit-dashboard`) and walk bookings/heroes/capacity.
-3. Supply Zoho / Firebase / Maps / Spaces credentials for live verification.
-4. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
+1. Supply a DigitalOcean API token so a **new** App Platform app and **new** Managed MySQL cluster can be created. See `docs/18-staging-deployment.md`.
+2. Do **not** reuse `jiffit-backend-v2-igply.ondigitalocean.app` or cluster `jiffit-v2-db-staging-do-user-25050266-0`.
+3. After staging exists: import `jiffit_migration_target`, seed admin + a small live catalog, then verify Dashboard/Customer/Hero against that API.
+4. Do **not** deploy to production. Do **not** push to GitLab. Remotes are GitHub only.
 
 Latest rehearsal: 17,894 orders, 102,546 visits, 91,735 wallet rows, and 10,509 invoices imported. All required row counts and monetary totals reconcile; see `docs/migration-reports/legacy-apply.md`.
 

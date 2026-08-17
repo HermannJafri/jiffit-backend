@@ -29,4 +29,5 @@ Application-specific docs:
 | [15-environment-assets.md](./15-environment-assets.md) | Env vars, secrets, missing assets, manual config |
 | [16-security-testing-deploy.md](./16-security-testing-deploy.md) | Security, tests, DigitalOcean |
 | [17-unresolved.md](./17-unresolved.md) | Open items |
+| [18-staging-deployment.md](./18-staging-deployment.md) | Isolated rebuild staging plan and DigitalOcean blocker |
 | [DECISIONS.md](./DECISIONS.md) | Architecture Decision Records |

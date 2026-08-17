@@ -34,9 +34,10 @@ Runner: Node test runner or Vitest after scaffold. Test DB name: `jiffit_test`.
 
 - New DigitalOcean App Platform services for backend and dashboard
 - Do not replace existing production App Platform apps
-- Existing Space reused
-- Staging first: migrate dry-run, payments sandbox, OTP test mode off only when Fast2SMS is verified
-- Mobile apps: EAS / store builds after API URL is known
+- Existing Space reused only when staging upload credentials are explicitly provided; default staging leaves Spaces unset
+- Staging first: isolated cluster + App Platform app named `jiffit-rebuild-staging*` — see `18-staging-deployment.md`
+- Mobile apps: Expo Go against the staging API URL; EAS / store builds later
+- Current blocker: DigitalOcean API token is not available in this environment
 
 ### Suggested App Platform
 
