@@ -36,7 +36,16 @@ Reconciliation poller retries pending links. Webhook inbox can replay.
 - Webhook signature + timestamp tolerance.
 - Mock pay only if `PAYMENT_MOCK_ENABLED` and not production.
 - Credentials only in env. Never commit live Zoho secrets.
-- Same production Zoho account may later point at this API; keep field names compatible.
+- ## Implemented APIs (this rebuild)
+
+- `ensurePaymentOrderForBooking` on online create (quote hash of catalog totals)
+- `POST /api/v1/customer/me/bookings/:id/zoho-payment-link` — `ZOHO_NOT_CONFIGURED` without credentials
+- `POST /api/v1/payments/zoho/webhook` — raw body + HMAC (`x-zoho-webhook-signature`)
+- `POST /api/v1/customer/me/bookings/:id/mock-payment` — only if `PAYMENT_MOCK_ENABLED` and non-production
+- Paid online: `PENDING_PAYMENT` → `PENDING_ASSIGNMENT` then dispatch; package purchase → `COMPLETED` + activate packages
+- `POST /api/v1/payments/cash-collection/settle`
+
+Live Zoho link creation: **BLOCKED BY CREDENTIAL**.
 
 ## Refunds
 

@@ -40,6 +40,33 @@ async function main() {
     });
     console.log(`Seeded dashboard user '${username}'. Change the password immediately.`);
   }
+
+  await prisma.appSetting.upsert({
+    where: { key: 'booking.bufferMinutes' },
+    update: {},
+    create: {
+      key: 'booking.bufferMinutes',
+      value: '15',
+      type: 'NUMBER',
+      category: 'booking',
+      label: 'Slot buffer minutes',
+      isPublic: false,
+    },
+  });
+
+  const dayShift = await prisma.workSchedule.findFirst({ where: { scope: 'GLOBAL', name: 'Day shift' } });
+  if (!dayShift) {
+    await prisma.workSchedule.create({
+      data: {
+        name: 'Day shift',
+        scope: 'GLOBAL',
+        shiftStart: '09:30',
+        shiftEnd: '18:30',
+        bookingEnabled: true,
+        isActive: true,
+      },
+    });
+  }
 }
 
 main()

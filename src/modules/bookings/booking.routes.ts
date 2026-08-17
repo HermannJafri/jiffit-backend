@@ -8,6 +8,7 @@ import { validate } from '../../middleware/validate';
 import { AppError, ok } from '../../utils/http';
 import { toBookingHttpError } from './booking-errors';
 import * as bookings from './booking.service';
+import * as dispatch from '../dispatch/dispatch.service';
 
 export const bookingRouter = Router();
 const dashboard = authenticate(['dashboard']);
@@ -56,6 +57,12 @@ const listQuery = z.object({
   customerId: z.coerce.number().int().positive().optional(),
   dateFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  paymentMethod: z.string().max(50).optional(),
+  cashSettled: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === 'true')),
+  q: z.string().trim().max(100).optional(),
 });
 
 const slotQuery = z.object({
@@ -114,6 +121,34 @@ bookingRouter.get(
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1) throw new AppError(400, 'Invalid booking id', 'VALIDATION_ERROR');
     ok(res, await bookings.getDashboardBooking(id));
+  }),
+);
+bookingRouter.get(
+  '/:id/eligible-heroes',
+  bookingRoute(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) throw new AppError(400, 'Invalid booking id', 'VALIDATION_ERROR');
+    ok(res, await dispatch.listDashboardEligibleHeroes(id));
+  }),
+);
+bookingRouter.patch(
+  '/:id/assign',
+  canWrite,
+  validate(z.object({ heroId: z.number().int().positive(), reason: z.string().trim().min(3).max(500) })),
+  bookingRoute(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) throw new AppError(400, 'Invalid booking id', 'VALIDATION_ERROR');
+    ok(res, await dispatch.assignHeroManually(id, req.body.heroId, req.auth!.id, req.body.reason), 'Assigned');
+  }),
+);
+bookingRouter.post(
+  '/:id/dispatch',
+  canWrite,
+  bookingRoute(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) throw new AppError(400, 'Invalid booking id', 'VALIDATION_ERROR');
+    await dispatch.planOrDispatchBooking(id, 'MANUAL_DISPATCH');
+    ok(res, { bookingId: id }, 'Dispatch queued');
   }),
 );
 bookingRouter.patch(

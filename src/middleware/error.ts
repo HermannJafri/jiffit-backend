@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { AppError, fail } from '../utils/http';
 import { logger } from '../utils/logger';
 import { toBookingHttpError } from '../modules/bookings/booking-errors';
+import { PaymentDomainError } from '../modules/payments/payment.service';
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
   const mapped = toBookingHttpError(err);
@@ -12,6 +13,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     fail(res, 400, 'Invalid request', 'VALIDATION_ERROR', {
       issues: error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
     });
+    return;
+  }
+
+  if (error instanceof PaymentDomainError) {
+    fail(res, 409, error.message, error.code);
     return;
   }
 

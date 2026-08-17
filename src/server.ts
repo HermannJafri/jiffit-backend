@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { createApp } from './app';
 import { prisma } from './config/database';
 import { assertProductionOtpSafety, env } from './config/env';
+import { processDueDispatches } from './modules/dispatch/dispatch.service';
 import { logger } from './utils/logger';
 
 assertProductionOtpSafety();
@@ -24,6 +25,9 @@ io.use((socket, next) => {
 
 async function start() {
   await prisma.$connect();
+  setInterval(() => {
+    processDueDispatches().catch((error) => logger.error('dispatch poller failed', error));
+  }, env.DISPATCH_POLL_INTERVAL_SECONDS * 1000);
   server.listen(env.PORT, () => {
     logger.info(`Jiffit API listening on :${env.PORT}`);
   });

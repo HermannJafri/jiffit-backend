@@ -32,4 +32,10 @@ Dashboard may still show a slot availability board derived from the **same pool*
 - Cron: unreserved booking → plan sync
 - Cron: capacity vs attendance → excess bookings `ON_HOLD` + notify
 
+## Implemented APIs (this rebuild)
+
+- `GET/POST /api/v1/capacity/schedules` — day-shift windows only
+- `GET/POST /api/v1/capacity/groups`, `PATCH /groups/:id/toggle`
+- `GET/PUT /api/v1/capacity/daily` — planned hero counts that drive the slot pool
+
 Overnight schedules are intentionally day-shift only in the rewrite. Keep that unless ops asks otherwise.

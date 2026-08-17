@@ -146,3 +146,18 @@ customerAppRouter.patch(
     );
   }),
 );
+
+customerAppRouter.post(
+  '/bookings/:id/zoho-payment-link',
+  bookingRoute(async (req, res) => {
+    const { createCheckoutForBooking } = await import('../payments/payment.service');
+    ok(res, await createCheckoutForBooking(req.auth!.id, Number(req.params.id)), 'Payment link ready');
+  }),
+);
+customerAppRouter.post(
+  '/bookings/:id/mock-payment',
+  bookingRoute(async (req, res) => {
+    const { mockPayBooking } = await import('../payments/payment.service');
+    ok(res, await mockPayBooking(req.auth!.id, Number(req.params.id)), 'Paid');
+  }),
+);

@@ -42,7 +42,16 @@ Mechanics to preserve: DB leases, offer expiry, retry/escalate, outbox → FCM/s
 - Minute cron expires stale alerts and reassigns
 - Attempt counter; escalate to operations after cap
 
-Shadow mode may run ETA preflight while still assigning via legacy. Useful in staging; not a production default.
+## Implemented APIs (this rebuild)
+
+- Plan/offer: cash create and verified online payment call `planOrDispatchBooking`
+- `GET /api/v1/bookings/:id/eligible-heroes`
+- `PATCH /api/v1/bookings/:id/assign` `{ heroId, reason }`
+- `POST /api/v1/bookings/:id/dispatch`
+- Hero: `GET /api/v1/hero/me/offers`, `POST /api/v1/hero/me/jobs/:id/accept|decline`, `POST .../advance`
+- Poller expires stale offers and retries (`DISPATCH_POLL_INTERVAL_SECONDS`)
+- ETA uses conservative haversine fallback until `GOOGLE_MAPS_API_KEY` is set
+- FCM is enqueued and skipped without Firebase credentials
 
 ## Manual dashboard assign
 

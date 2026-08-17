@@ -54,9 +54,11 @@ See `docs/00-index.md` for the full index.
 | Geography (states/cities/hubs) | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
 | Booking engine | IMPLEMENTED / PARTIALLY TESTED (unit tests; needs MySQL for API integration) |
 | Scheduling / capacity | IMPLEMENTED / PARTIALLY TESTED (pool core unit-tested; overtime quotes and live ETA overlay not yet) |
-| Hero assignment / ETA dispatch | NOT IMPLEMENTED |
-| Zoho payments | NOT IMPLEMENTED |
-| Notifications / FCM | NOT IMPLEMENTED |
+| Hero assignment / ETA dispatch | IMPLEMENTED / PARTIALLY TESTED (unit tests; live Google ETA BLOCKED BY CREDENTIAL; FCM enqueue only) |
+| Capacity groups / daily pools | IMPLEMENTED AND TESTED (CRUD + slot pool already using these tables) |
+| Zoho payments | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL (HMAC, quote hash, webhook, mock pay, provider client) |
+| Notifications / FCM | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL (enqueue + skip without Firebase) |
+| DigitalOcean Spaces uploads | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL |
 | Dashboard | PARTIALLY IMPLEMENTED (scaffold + login page + brand tokens) |
 | Customer Expo app | PARTIALLY IMPLEMENTED (scaffold + copied assets) |
 | Hero Expo app | PARTIALLY IMPLEMENTED (scaffold + copied assets) |
@@ -67,7 +69,7 @@ See `docs/00-index.md` for the full index.
 ## WHAT HAS BEEN TESTED
 
 - Backend `tsc` clean
-- Unit tests: Indian mobile normalize, production OTP safety, hero auth gating, slugify, haversine hub picker, booking transitions, catalog pricing, slot-pool math
+- Unit tests: 50 passing (dispatch time/state, Zoho HMAC, quote hash, mock-pay policy, plus prior suites)
 - Prisma client generate
 - Initial MySQL migration SQL generated from schema (`prisma/migrations/20260817000000_init`)
 - Next.js dashboard production build (scaffold)
@@ -79,7 +81,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Next: Hero eligibility + ETA dispatch / assignment, then Zoho payments.
+Next: operational Dashboard screens wired to the new APIs, then Customer/Hero Expo apps, then migration CLI.
 
 ---
 
@@ -115,7 +117,7 @@ Follow the development order in `docs/08-target-architecture.md`:
 ## WHAT SHOULD HAPPEN NEXT
 
 1. Point `DATABASE_URL` at a local/staging MySQL 8 database and run `npx prisma migrate deploy` + `npm run db:seed`.
-2. Implement Hero eligibility + ETA dispatch (cash bookings stay `PENDING_ASSIGNMENT` until then).
+2. Continue Dashboard → Customer Expo → Hero Expo → migration CLI.
 3. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
 
 ---

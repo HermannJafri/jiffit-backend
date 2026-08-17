@@ -46,6 +46,8 @@ const bookingListSelect = {
   customerNotes: true,
   isPackagePurchase: true,
   requiredWorkerCount: true,
+  cashSettled: true,
+  cashSettledAt: true,
   createdAt: true,
   city: { select: { id: true, name: true } },
   serviceCategory: { select: { id: true, name: true, iconUrl: true } },
@@ -491,6 +493,16 @@ export async function createCustomerBooking(customerId: number, data: CreateCust
     await createPendingPackages(customerId, created.id, pricedItems);
   }
 
+  if (onlinePayment && !created.replayed) {
+    const { ensurePaymentOrderForBooking } = await import('../payments/payment.service');
+    await ensurePaymentOrderForBooking(customerId, created.id);
+  } else if (!isPackagePurchase && !onlinePayment && !created.replayed) {
+    const { planOrDispatchBooking } = await import('../dispatch/dispatch.service');
+    setImmediate(() => {
+      planOrDispatchBooking(created.id, 'CASH_BOOKING_CREATED').catch(() => undefined);
+    });
+  }
+
   const booking = await prisma.booking.findFirstOrThrow({ where: { id: created.id }, select: bookingDetailSelect });
   return { booking, replayed: created.replayed };
 }
@@ -718,6 +730,16 @@ export async function createDashboardBooking(actorUserId: number, data: CreateDa
     await createPendingPackages(data.customerId, created.id, pricedItems);
   }
 
+  if (!created.replayed && onlinePayment && data.customerId) {
+    const { ensurePaymentOrderForBooking } = await import('../payments/payment.service');
+    await ensurePaymentOrderForBooking(data.customerId, created.id);
+  } else if (!created.replayed && !isPackagePurchase && !onlinePayment) {
+    const { planOrDispatchBooking } = await import('../dispatch/dispatch.service');
+    setImmediate(() => {
+      planOrDispatchBooking(created.id, 'DASHBOARD_CASH_BOOKING_CREATED').catch(() => undefined);
+    });
+  }
+
   return prisma.booking.findFirstOrThrow({ where: { id: created.id }, select: bookingDetailSelect });
 }
 
@@ -729,6 +751,9 @@ export async function listDashboardBookings(filter: {
   customerId?: number;
   dateFrom?: string;
   dateTo?: string;
+  paymentMethod?: string;
+  cashSettled?: boolean;
+  q?: string;
 }) {
   const page = filter.page ?? 1;
   const limit = Math.min(filter.limit ?? 20, 100);
@@ -736,6 +761,16 @@ export async function listDashboardBookings(filter: {
   if (filter.status) where.status = filter.status;
   if (filter.cityId) where.cityId = filter.cityId;
   if (filter.customerId) where.customerId = filter.customerId;
+  if (filter.paymentMethod) where.paymentMethod = filter.paymentMethod;
+  if (typeof filter.cashSettled === 'boolean') where.cashSettled = filter.cashSettled;
+  if (filter.q?.trim()) {
+    const q = filter.q.trim();
+    where.OR = [
+      { bookingNo: { contains: q } },
+      { customerName: { contains: q } },
+      { customerPhone: { contains: q } },
+    ];
+  }
   if (filter.dateFrom || filter.dateTo) {
     where.scheduledDate = {
       ...(filter.dateFrom ? { gte: new Date(`${filter.dateFrom}T00:00:00.000Z`) } : {}),
