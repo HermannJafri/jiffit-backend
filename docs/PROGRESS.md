@@ -80,9 +80,10 @@ Next: geography + catalog APIs, then customer addresses and booking creation aga
 
 | Item | Why |
 |------|-----|
+| Push to `HermannJafri/*` GitHub repos | Local GitHub CLI is `HermanSher`; push returned 403. Remotes are correct (no GitLab). Commits are local until HermannJafri grants access or pushes. |
 | Production OTP / FCM / Maps / Zoho / Spaces | Requires credentials the rebuild must not copy from reference `.env` files |
 | Final production migration | Requires a **fresh** dump from old production Jiffit (current dump is for design/test only) |
-| Firebase / Google Services JSON for mobile | Manual configuration; see `docs/18-environment-variables.md` and `docs/19-assets.md` |
+| Firebase / Google Services JSON for mobile | Manual configuration; see `docs/15-environment-assets.md` |
 | App signing / store listings | Manual |
 
 ---
