@@ -1,0 +1,265 @@
+{
+  "generatedAt": "2026-08-17T02:36:00.804Z",
+  "dump": "C:\\Users\\herma\\Downloads\\Backup\\old-jiffit-latest.sql",
+  "dryRun": true,
+  "suppressSideEffects": true,
+  "sideEffects": {
+    "fcm": false,
+    "otp": false,
+    "zoho": false,
+    "sms": false,
+    "autoDispatch": false
+  },
+  "missingRequiredTables": [],
+  "tables": [
+    {
+      "table": "address",
+      "insertStatements": 3,
+      "estimatedRows": 14760,
+      "target": "customer_addresses",
+      "notes": "Preserve lat/lng and city"
+    },
+    {
+      "table": "admin",
+      "insertStatements": 1,
+      "estimatedRows": 97,
+      "target": "dashboard_users",
+      "notes": "Ops users; passwords must be reset"
+    },
+    {
+      "table": "banners",
+      "insertStatements": 1,
+      "estimatedRows": 22,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "blog_authors",
+      "insertStatements": 1,
+      "estimatedRows": 3,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "blog_cats",
+      "insertStatements": 1,
+      "estimatedRows": 6,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "blogs",
+      "insertStatements": 1,
+      "estimatedRows": 14,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "cities",
+      "insertStatements": 1,
+      "estimatedRows": 5,
+      "target": "cities",
+      "notes": "Need a default hub per city"
+    },
+    {
+      "table": "courses",
+      "insertStatements": 1,
+      "estimatedRows": 2,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "currency",
+      "insertStatements": 1,
+      "estimatedRows": 3,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "faqs",
+      "insertStatements": 1,
+      "estimatedRows": 14,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "invoices",
+      "insertStatements": 10,
+      "estimatedRows": 10519,
+      "target": "invoices",
+      "notes": "Preserve amounts; FY prefix continuation is a manual decision"
+    },
+    {
+      "table": "language",
+      "insertStatements": 1,
+      "estimatedRows": 2,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "messages",
+      "insertStatements": 1,
+      "estimatedRows": 935,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "migrations",
+      "insertStatements": 1,
+      "estimatedRows": 2,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "offers",
+      "insertStatements": 1,
+      "estimatedRows": 36,
+      "target": "coupons",
+      "notes": "If still valid; else archive"
+    },
+    {
+      "table": "orders",
+      "insertStatements": 20,
+      "estimatedRows": 17914,
+      "target": "bookings",
+      "notes": "legacyOrderId; items JSON → booking_items; status map to LEGACY_ARCHIVED unless completed/cancelled"
+    },
+    {
+      "table": "orderstats",
+      "insertStatements": 1,
+      "estimatedRows": 11,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "pages",
+      "insertStatements": 1,
+      "estimatedRows": 14,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "permission_role",
+      "insertStatements": 1,
+      "estimatedRows": 117,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "permissions",
+      "insertStatements": 1,
+      "estimatedRows": 47,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "roles",
+      "insertStatements": 1,
+      "estimatedRows": 6,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "settings",
+      "insertStatements": 1,
+      "estimatedRows": 46,
+      "target": "skip_secrets",
+      "notes": "Do not migrate secrets"
+    },
+    {
+      "table": "slots",
+      "insertStatements": 1,
+      "estimatedRows": 7,
+      "target": "skip_unmapped",
+      "notes": "Historical label only; live slots are capacity pool"
+    },
+    {
+      "table": "tags",
+      "insertStatements": 1,
+      "estimatedRows": 146,
+      "target": "service_categories",
+      "notes": "Plus service_groups as needed"
+    },
+    {
+      "table": "tasks",
+      "insertStatements": 68,
+      "estimatedRows": 102614,
+      "target": "legacy_booking_visits",
+      "notes": "Never live assignment"
+    },
+    {
+      "table": "testimonials",
+      "insertStatements": 1,
+      "estimatedRows": 11,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "track_location",
+      "insertStatements": 1,
+      "estimatedRows": 3215,
+      "target": "skip_unmapped",
+      "notes": "Do not bulk-import breadcrumbs"
+    },
+    {
+      "table": "users",
+      "insertStatements": 9,
+      "estimatedRows": 27330,
+      "target": "customers",
+      "notes": "Split by role: 0 customers, 1 heroes (legacyUserId)"
+    },
+    {
+      "table": "vendor_photos",
+      "insertStatements": 1,
+      "estimatedRows": 4,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "vendor_rates",
+      "insertStatements": 1,
+      "estimatedRows": 467,
+      "target": "services",
+      "notes": "Catalog reconstruction reference"
+    },
+    {
+      "table": "vendor_tags",
+      "insertStatements": 1,
+      "estimatedRows": 2754,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "vendor_types",
+      "insertStatements": 1,
+      "estimatedRows": 3,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "vpushes",
+      "insertStatements": 4,
+      "estimatedRows": 13194,
+      "target": "skip_unmapped",
+      "notes": "No mapping yet — log and do not drop silently"
+    },
+    {
+      "table": "wallet_trn",
+      "insertStatements": 10,
+      "estimatedRows": 91745,
+      "target": "legacy_wallet_transactions",
+      "notes": "Reconcile SUM(amount)"
+    }
+  ],
+  "totals": {
+    "tables": 34,
+    "insertStatements": 151,
+    "estimatedRows": 286065
+  },
+  "nextApplyRequires": [
+    "Isolated staging MySQL (never unknown production)",
+    "Default hub per legacy city",
+    "Invoice FY prefix continuation decision",
+    "Fresh production dump for cutover (this dump is rehearsal)"
+  ]
+}

@@ -59,10 +59,10 @@ See `docs/00-index.md` for the full index.
 | Zoho payments | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL (HMAC, quote hash, webhook, mock pay, provider client) |
 | Notifications / FCM | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL (enqueue + skip without Firebase) |
 | DigitalOcean Spaces uploads | IMPLEMENTED — LIVE VERIFICATION BLOCKED BY CREDENTIAL |
-| Dashboard | PARTIALLY IMPLEMENTED (scaffold + login page + brand tokens) |
-| Customer Expo app | PARTIALLY IMPLEMENTED (scaffold + copied assets) |
-| Hero Expo app | PARTIALLY IMPLEMENTED (scaffold + copied assets) |
-| Migration tooling | NOT IMPLEMENTED (mapping documented; CLI not built) |
+| Dashboard | IMPLEMENTED / PARTIALLY TESTED (`next build` succeeded; live API needs MySQL) |
+| Customer Expo app | IMPLEMENTED / PARTIALLY TESTED (typecheck; live OTP BLOCKED BY CREDENTIAL) |
+| Hero Expo app | IMPLEMENTED / PARTIALLY TESTED (typecheck; Spaces live upload BLOCKED BY CREDENTIAL) |
+| Migration tooling | IMPLEMENTED / PARTIALLY TESTED (dump inventory dry-run; apply blocked until staging MySQL) |
 
 ---
 
@@ -81,7 +81,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Next: operational Dashboard screens wired to the new APIs, then Customer/Hero Expo apps, then migration CLI.
+Remaining polish: live MySQL integration tests, Google Maps/FCM/Zoho/Spaces live verification, Dashboard HR/map/support, Expo camera/maps polish, migration apply against staging MySQL.
 
 ---
 
@@ -98,27 +98,25 @@ Next: operational Dashboard screens wired to the new APIs, then Customer/Hero Ex
 
 ## WHAT REMAINS
 
-Follow the development order in `docs/08-target-architecture.md`:
+Core reconstruction of Backend, Dashboard, Customer, Hero, Zoho architecture, Spaces architecture, FCM enqueue, and migration dry-run is in place.
 
-1. Backend foundation + auth
-2. Geography + catalog + customer addresses
-3. Booking + slot pool
-4. Dispatch / assignment
-5. Payments
-7. Notifications
-8. Dashboard
-9. Customer Expo app
-10. Hero Expo app
-11. Migration tooling
-12. Tests, UX polish, deployment prep, handover
+Still remaining before a production cutover:
+
+- Live MySQL integration tests
+- Credential-gated live verification (Zoho, FCM, Maps, Spaces, OTP)
+- Dashboard HR/payroll/support/live map polish
+- Expo camera, maps navigation, and native offer ringing
+- Migration apply + financial reconciliation on isolated staging MySQL
+- Fresh production dump for cutover
 
 ---
 
 ## WHAT SHOULD HAPPEN NEXT
 
 1. Point `DATABASE_URL` at a local/staging MySQL 8 database and run `npx prisma migrate deploy` + `npm run db:seed`.
-2. Continue Dashboard → Customer Expo → Hero Expo → migration CLI.
-3. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
+2. Run `npm run migrate:legacy` against the rehearsal dump, then apply only on isolated staging MySQL.
+3. Supply Zoho / Firebase / Maps / Spaces credentials for live verification.
+4. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
 
 ---
 

@@ -158,15 +158,24 @@ export async function advanceHeroJob(heroId: number, bookingId: number, to: 'ON_
 
 export async function attachJobPhoto(heroId: number, bookingId: number, kind: 'before' | 'after', file: { buffer: Buffer; filename: string; contentType: string }) {
   await getHeroJob(heroId, bookingId);
-  const uploaded = await uploadPublicObject({
-    folder: `bookings/${bookingId}/${kind}`,
-    filename: file.filename,
-    body: file.buffer,
-    contentType: file.contentType,
-  });
+  let url: string;
+  try {
+    const uploaded = await uploadPublicObject({
+      folder: `bookings/${bookingId}/${kind}`,
+      filename: file.filename,
+      body: file.buffer,
+      contentType: file.contentType,
+    });
+    url = uploaded.url;
+  } catch (error) {
+    if (!(error instanceof AppError) || error.code !== 'SPACES_NOT_CONFIGURED' || env.NODE_ENV === 'production') {
+      throw error;
+    }
+    url = `https://placeholder.jiffit.dev/DEV-NOT-PRODUCTION/${kind}/${bookingId}/${encodeURIComponent(file.filename)}`;
+  }
   return prisma.booking.update({
     where: { id: bookingId },
-    data: kind === 'before' ? { beforePhotoUrl: uploaded.url } : { afterPhotoUrl: uploaded.url },
+    data: kind === 'before' ? { beforePhotoUrl: url } : { afterPhotoUrl: url },
   });
 }
 

@@ -109,6 +109,30 @@ heroOpsRouter.post(
   }),
 );
 
+heroOpsRouter.post(
+  '/jobs/:id/photos',
+  validate(
+    z.object({
+      kind: z.enum(['before', 'after']),
+      dataBase64: z.string().min(16),
+      filename: z.string().min(1).max(120).default('photo.jpg'),
+      contentType: z.string().min(1).max(80).default('image/jpeg'),
+    }),
+  ),
+  wrap(async (req, res) => {
+    const buffer = Buffer.from(String(req.body.dataBase64).replace(/^data:[^;]+;base64,/, ''), 'base64');
+    ok(
+      res,
+      await ops.attachJobPhoto(req.auth!.id, Number(req.params.id), req.body.kind, {
+        buffer,
+        filename: req.body.filename,
+        contentType: req.body.contentType,
+      }),
+      'Photo attached',
+    );
+  }),
+);
+
 heroOpsRouter.get(
   '/leaves',
   wrap(async (req, res) => {

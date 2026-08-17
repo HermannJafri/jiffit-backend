@@ -66,7 +66,13 @@ Legacy wallet_trn count + SUM(amount) vs migrated count + SUM(amount)
 
 Finance reconciles **count and amount**, not count alone.
 
-## Final fresh dump process
+## Rehearsal CLI (this rebuild)
+
+```bash
+npm run migrate:legacy
+```
+
+Reads `LEGACY_SQL_DUMP` or `C:\Users\herma\Downloads\Backup\old-jiffit-latest.sql`, inventories INSERT statements, writes `docs/migration-reports/legacy-dry-run.{json,md}`. Apply mode is blocked until an isolated staging MySQL is confirmed. No FCM/OTP/Zoho/SMS/dispatch.
 
 1. Preserve untouched backup of the fresh dump
 2. Restore in an isolated migration environment
