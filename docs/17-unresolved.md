@@ -2,7 +2,7 @@
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Push to HermannJafri GitHub repos | REQUIRES CREDENTIAL | Local `gh` is authenticated as `HermanSher`; writes to `HermannJafri/*` returned 403. Commits exist locally. Add collaborator access or push as HermannJafri. |
+| Push to HermannJafri GitHub repos | IMPLEMENTED | All four `main` branches pushed as `HermannJafri`. |
 | Fresh old-production SQL dump | BLOCKED | Current dump is rehearsal only |
 | Production Zoho / Fast2SMS / Firebase / Spaces / Maps credentials | REQUIRES CREDENTIAL | Names documented; values not copied |
 | Customer self-reschedule | NOT IMPLEMENTED in rewrite | Do not invent |

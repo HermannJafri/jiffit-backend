@@ -4,6 +4,8 @@ This file is the continuation point for any developer or Cursor session.
 
 Last updated: 2026-08-17
 
+GitHub remotes verified and pushed as `HermannJafri`.
+
 ---
 
 ## WHAT HAS BEEN ANALYZED
@@ -46,7 +48,10 @@ See `docs/00-index.md` for the full index.
 | Documentation baseline | IMPLEMENTED |
 | Backend foundation (Express + TS + Prisma schema + `/health`) | IMPLEMENTED / TESTED (unit tests for phone, OTP safety, hero gating) |
 | Authentication (dashboard password, customer/hero OTP, JWT refresh) | IMPLEMENTED / PARTIALLY TESTED (needs MySQL for integration) |
-| Service catalog | NOT IMPLEMENTED |
+| Service catalog | IMPLEMENTED / PARTIALLY TESTED (needs MySQL for API integration) |
+| Public hub-scoped catalog | IMPLEMENTED / TESTED (haversine hub picker unit tests) |
+| Customer addresses | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
+| Geography (states/cities/hubs) | IMPLEMENTED / PARTIALLY TESTED (needs MySQL) |
 | Booking engine | NOT IMPLEMENTED |
 | Scheduling / capacity | NOT IMPLEMENTED |
 | Hero assignment / ETA dispatch | NOT IMPLEMENTED |
@@ -62,9 +67,11 @@ See `docs/00-index.md` for the full index.
 ## WHAT HAS BEEN TESTED
 
 - Backend `tsc` clean
-- Unit tests: Indian mobile normalize, production OTP safety, hero auth gating
+- Unit tests: Indian mobile normalize, production OTP safety, hero auth gating, slugify, haversine hub picker
 - Prisma client generate
 - Initial MySQL migration SQL generated from schema (`prisma/migrations/20260817000000_init`)
+- Next.js dashboard production build (scaffold)
+- All four GitHub `main` branches pushed as `HermannJafri`
 
 Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
@@ -72,7 +79,7 @@ Not yet: live MySQL, Fast2SMS, Zoho, FCM, Expo runtime, Next production build.
 
 ## WHAT IS CURRENTLY BEING WORKED ON
 
-Next: geography + catalog APIs, then customer addresses and booking creation against the capacity-pool design.
+Next: booking creation + canonical capacity-pool slots, then dispatch.
 
 ---
 
@@ -80,7 +87,6 @@ Next: geography + catalog APIs, then customer addresses and booking creation aga
 
 | Item | Why |
 |------|-----|
-| Push to `HermannJafri/*` GitHub repos | Local GitHub CLI is `HermanSher`; push returned 403. Remotes are correct (no GitLab). Commits are local until HermannJafri grants access or pushes. |
 | Production OTP / FCM / Maps / Zoho / Spaces | Requires credentials the rebuild must not copy from reference `.env` files |
 | Final production migration | Requires a **fresh** dump from old production Jiffit (current dump is for design/test only) |
 | Firebase / Google Services JSON for mobile | Manual configuration; see `docs/15-environment-assets.md` |
@@ -93,11 +99,10 @@ Next: geography + catalog APIs, then customer addresses and booking creation aga
 Follow the development order in `docs/08-target-architecture.md`:
 
 1. Backend foundation + auth
-2. Geography + catalog
-3. Customers / addresses
-4. Booking + slot pool
-5. Dispatch / assignment
-6. Payments
+2. Geography + catalog + customer addresses
+3. Booking + slot pool
+4. Dispatch / assignment
+5. Payments
 7. Notifications
 8. Dashboard
 9. Customer Expo app
@@ -110,9 +115,8 @@ Follow the development order in `docs/08-target-architecture.md`:
 ## WHAT SHOULD HAPPEN NEXT
 
 1. Point `DATABASE_URL` at a local/staging MySQL 8 database and run `npx prisma migrate deploy` + `npm run db:seed`.
-2. Implement catalog and geography modules.
-3. Implement booking create + slot pool (canonical).
-4. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
+2. Implement booking create + capacity-pool slots.
+3. Do **not** deploy. Do **not** push to GitLab. Remotes are GitHub only.
 
 ---
 
